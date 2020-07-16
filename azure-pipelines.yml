@@ -24,6 +24,6 @@ stages:
         conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
         conan install --build=missing ..
         echo "Current working dir is $(pwd)"
-        cmake -DCMAKE_MODULE_PATH:FILE_PATH="$(pwd)"
+        cmake -DCMAKE_MODULE_PATH:FILE_PATH="$(pwd)" ..
         cmake --build .
       displayName: "Building in build/"
