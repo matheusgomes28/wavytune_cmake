@@ -3,9 +3,6 @@
 # Add steps that build, run tests, deploy, and more:
 # https://aka.ms/yaml
 
-trigger:
-- master
-
 pool:
   vmImage: 'ubuntu-latest'
 
@@ -14,14 +11,18 @@ variables:
   var1: value1
 
 stages:
-- stage: testing
-  displayName: testing stage
+- stage: compilationx86_64
+  displayName: Compiling For x86_64
   variables:
-    testing_var: "hello"
+    BUILD_TYPE: "DEBUG"
   jobs:
-  - job: "SayingHello"
-    container: "mattgomes28/wavytune:latest"
+  - job: "compile"
+    container: "mattgomes28/wavytune:comp"
     steps:
+    - script: mkdir build && cd build
     - script: |
-        python3 -c "print('hello from job')"
-        pip3 install colorama
+        conan install --build=missing
+    - script: |
+        cmake -DCMAKE_MODULE_PATH:FILE_PATH="$(pwd)"
+    - script: |
+        cmake --build . 
