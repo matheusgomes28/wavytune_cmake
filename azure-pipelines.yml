@@ -23,7 +23,11 @@ stages:
       displayName: "Create Build Dir"
     - script: conan install --build=missing ..
       displayName: "Install Dependencies"
-    - script: cmake -DCMAKE_MODULE_PATH:FILE_PATH="$(pwd)"
+    - script: |
+        cd build
+        cmake -DCMAKE_MODULE_PATH:FILE_PATH="$(pwd)"
       displayName: "Generating CMake"
-    - script: cmake --build . 
+    - script: |
+        cd build
+        cmake --build . 
       displayName: "Building"
