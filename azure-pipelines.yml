@@ -17,7 +17,7 @@ stages:
     BUILD_TYPE: "DEBUG"
   jobs:
   - job: "compile"
-    container: "mattgomes28/wavytune:comp"
+    container: "mattgomes28/wavytune:compx86_64"
     steps:
     - script: |
         mkdir build && cd build
