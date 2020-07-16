@@ -20,9 +20,10 @@ stages:
     container: "mattgomes28/wavytune:comp"
     steps:
     - script: mkdir build && cd build
-    - script: |
-        conan install --build=missing
-    - script: |
-        cmake -DCMAKE_MODULE_PATH:FILE_PATH="$(pwd)"
-    - script: |
-        cmake --build . 
+      displayName: "Create Build Dir"
+    - script: conan install --build=missing ..
+      displayName: "Install Dependencies"
+    - script: cmake -DCMAKE_MODULE_PATH:FILE_PATH="$(pwd)"
+      displayName: "Generating CMake"
+    - script: cmake --build . 
+      displayName: "Building"
