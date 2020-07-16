@@ -9,11 +9,19 @@ trigger:
 pool:
   vmImage: 'ubuntu-latest'
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+name: $(Date:ddMMyyyy)$(Rev:.r)
+variables:
+  var1: value1
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+stages:
+- stage: testing
+  displayName: testing stage
+  variables:
+    testing_var: "hello"
+  jobs:
+  - job: "SayingHello"
+    container: "mattgomes28/wavytune:latest"
+    steps:
+    - script: |
+        python3 -c "print('hello from job')"
+        pip3 install colorama
