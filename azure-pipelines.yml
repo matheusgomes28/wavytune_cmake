@@ -23,3 +23,5 @@ stages:
         cmake -DCMAKE_MODULE_PATH:FILE_PATH="$(pwd)" ..
         cmake --build .
       displayName: "Building with CMake"
+    - publish: $(System.DefaultWorkingDirectory)/build
+      artifact: buildFiles
