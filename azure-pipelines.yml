@@ -9,6 +9,7 @@ pool:
 name: $(Date:ddMMyyyy)$(Rev:.r)
 
 stages:
+
 - stage: compilationx86_64
   displayName: Compiling For x86_64
   variables:
@@ -24,4 +25,20 @@ stages:
         cmake --build .
       displayName: "Building with CMake"
     - publish: $(System.DefaultWorkingDirectory)/build
-      artifact: buildFiles
+      artifact: build
+
+- stage: testx86_64
+  displayName: Testing x86_64 build
+  jobs:
+  - job: "test"
+    container: "mattgomes28/wavytune:compx86_64"
+    steps:
+    - download: current
+      artifact: build
+    - script: |
+        mkdir build && cd build
+        conan install -s compiler.libcxx=libstdc++11 --build=missing ..
+        cmake -DCMAKE_MODULE_PATH:FILE_PATH="$(pwd)" ..
+        cmake --build . --target matrix_test
+        ctest
+      displayName: Running CTests
