@@ -24,8 +24,6 @@ stages:
         cmake -DCMAKE_MODULE_PATH:FILE_PATH="$(pwd)" ..
         cmake --build .
       displayName: "Building with CMake"
-    - publish: $(System.DefaultWorkingDirectory)/build
-      artifact: build
 
 - stage: testx86_64
   displayName: Testing x86_64 build
@@ -33,12 +31,10 @@ stages:
   - job: "test"
     container: "mattgomes28/wavytune:compx86_64"
     steps:
-    - download: current
-      artifact: build
     - script: |
         mkdir build && cd build
         conan install -s compiler.libcxx=libstdc++11 --build=missing ..
         cmake -DCMAKE_MODULE_PATH:FILE_PATH="$(pwd)" ..
-        cmake --build . --target matrix_test
+        cmake --build . --target all-tests
         ctest
       displayName: Running CTests
