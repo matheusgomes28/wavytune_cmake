@@ -16,3 +16,8 @@ add_executable(matrix_test matrix_test.cpp)
 add_dependencies(all-tests matrix_test)
 add_test(unit-tests-matrix_tests matrix_test)
 target_link_libraries(matrix_test fourier main_unit_test)
+
+add_executable(byte_array_test byte_array_tests.cpp)
+add_dependencies(all-tests byte_array_test)
+add_test(unit-tests-byte_array_tests byte_array_test)
+target_link_libraries(byte_array_test data_structures main_unit_test)
