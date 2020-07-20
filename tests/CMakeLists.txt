@@ -1,11 +1,10 @@
 find_package(GTest REQUIRED)
 
-
 #
 # Create custom target and the library
 # containing the main for gtests, which
 # must be added as a dependency to every
-# test exeutable
+# test executable
 add_custom_target(all-tests)
 add_library(main_unit_test main_unit_test.cpp)
 target_link_libraries(main_unit_test PUBLIC GTest::GTest)
