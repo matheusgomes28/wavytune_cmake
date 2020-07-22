@@ -9,10 +9,6 @@ pool:
 name: $(Date:ddMMyyyy)$(Rev:.r)
 
 stages:
-<<<<<<< HEAD
-=======
-
->>>>>>> 83dab058dd8e74c48aefcc3fb596702f422434b5
 - stage: compilationx86_64
   displayName: Compiling For x86_64
   variables:
