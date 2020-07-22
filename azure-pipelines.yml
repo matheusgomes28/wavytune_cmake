@@ -7,23 +7,38 @@ pool:
   vmImage: 'ubuntu-latest'
 
 name: $(Date:ddMMyyyy)$(Rev:.r)
-variables:
-  var1: value1
 
 stages:
+<<<<<<< HEAD
+=======
+
+>>>>>>> 83dab058dd8e74c48aefcc3fb596702f422434b5
 - stage: compilationx86_64
   displayName: Compiling For x86_64
   variables:
     BUILD_TYPE: "DEBUG"
+
   jobs:
   - job: "compile"
     container: "mattgomes28/wavytune:compx86_64"
     steps:
     - script: |
         mkdir build && cd build
-        conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
         conan install -s compiler.libcxx=libstdc++11 --build=missing ..
-        echo "Current working dir is $(pwd)"
         cmake -DCMAKE_MODULE_PATH:FILE_PATH="$(pwd)" ..
         cmake --build .
-      displayName: "Building in build/"
+      displayName: "Building with CMake"
+
+- stage: testx86_64
+  displayName: Testing x86_64 build
+  jobs:
+  - job: "test"
+    container: "mattgomes28/wavytune:compx86_64"
+    steps:
+    - script: |
+        mkdir build && cd build
+        conan install -s compiler.libcxx=libstdc++11 --build=missing ..
+        cmake -DCMAKE_MODULE_PATH:FILE_PATH="$(pwd)" ..
+        cmake --build . --target all-tests
+        ctest
+      displayName: Running CTests

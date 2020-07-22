@@ -421,9 +421,3 @@ TEST(MatrixTests, subtracts_3_by_4)
 	EXPECT_EQ(result[2][2], 0);
 	EXPECT_EQ(result[2][3], 0);
 }
-
-int main(int argc, char** argv)
-{
-	::testing::InitGoogleTest(&argc, argv);
-	return RUN_ALL_TESTS();
-}
