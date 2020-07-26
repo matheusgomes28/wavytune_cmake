@@ -9,6 +9,18 @@ pool:
 name: $(Date:ddMMyyyy)$(Rev:.r)
 
 stages:
+- stage: conan_x86_64
+  displayName: Conan Dependencies X86_64
+  jobs:
+  - job: "pulling dependencies"
+    steps:
+    - script: |
+        mkdir build && cd build
+        conan install -s compiler.libcxx=libstdc++11 --build=missing
+    - publish: /conan/
+      artifact: conan_deps
+
+stages:
 - stage: compilationx86_64
   displayName: Compiling For x86_64
   variables:
