@@ -21,7 +21,7 @@ stages:
     - script: |
         mkdir build && cd build
         conan install -s compiler.libcxx=libstdc++11 --build=missing ..
-    - publish: /conan/
+    - publish: "/conan"
       artifact: conan_deps
 
 - stage: compilationx86_64
