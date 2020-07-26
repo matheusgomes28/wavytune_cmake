@@ -8,11 +8,14 @@ pool:
 
 name: $(Date:ddMMyyyy)$(Rev:.r)
 
+
+
 stages:
+
 - stage: conan_x86_64
   displayName: Conan Dependencies X86_64
   jobs:
-  - job: "pulling dependencies"
+  - job: "pullingDependencies"
     steps:
     - script: |
         mkdir build && cd build
@@ -20,7 +23,6 @@ stages:
     - publish: /conan/
       artifact: conan_deps
 
-stages:
 - stage: compilationx86_64
   displayName: Compiling For x86_64
   variables:
