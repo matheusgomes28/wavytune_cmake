@@ -11,21 +11,18 @@ name: $(Date:ddMMyyyy)$(Rev:.r)
 
 
 stages:
-
 - stage: conan_x86_64
   displayName: Conan Dependencies X86_64
   jobs:
-  - job: "pullingDependencies"
-    container: "mattgomes28/wavytune:compx86_64"
+  - job: "pulling dependencies"
     steps:
     - script: |
         mkdir build && cd build
-        conan install -s compiler.libcxx=libstdc++11 --build=missing ..
-        mkdir $(System.DefaultWorkingDirectory)/conan_artifacts
-        cp -a /conan/. $(System.DefaultWorkingDirectory)/conan_artifacts/ 
-    - publish: $(System.DefaultWorkingDirectory)/conan_artifacts
+        conan install -s compiler.libcxx=libstdc++11 --build=missing
+    - publish: /conan/
       artifact: conan_deps
 
+stages:
 - stage: compilationx86_64
   displayName: Compiling For x86_64
   variables:
