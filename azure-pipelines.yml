@@ -59,7 +59,8 @@ stages:
         conan install -s compiler.libcxx=libstdc++11 --build=missing ..
         cmake -DCMAKE_MODULE_PATH:FILE_PATH="$(pwd)" -DCMAKE_CXX_FLAGS="--coverage" -DCMAKE_CXX_OUTPUT_EXTENSION_REPLACE="1" ..
         cmake --build . --target all-tests
+        ctest
+        gcov *.cpp --object-directory coverage_dump/
         echo "Showing the generated shit"
         ls -R
-        ctest
       displayName: Running CTests
