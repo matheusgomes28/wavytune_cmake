@@ -21,10 +21,8 @@ stages:
     - script: |
         mkdir build && cd build
         conan install -s compiler.libcxx=libstdc++11 --build=missing ..
-        echo "showing conan folder: "
-        ls -la /conan/
-        echo "end contents conan fodler"
-    - publish: /conan/.conan
+        mkdir conan_artifacts && cp /conan/* conan_artifacts 
+    - publish: $(System.DefaultWorkingDirectory)/conan_artifacts
       artifact: conan_deps
 
 - stage: compilationx86_64
