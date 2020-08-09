@@ -19,6 +19,7 @@ stages:
     container: "mattgomes28/wavytune:compx86_64"
     steps:
     - script: |
+        ls -la /conan/
         mkdir build && cd build
         conan install -s compiler.libcxx=libstdc++11 --build=missing ..
     - publish: /conan/.conan
