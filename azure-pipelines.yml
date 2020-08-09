@@ -51,6 +51,8 @@ stages:
   - job: "test"
     container: "mattgomes28/wavytune:compx86_64"
     steps:
+    - download: current
+      artifact: conan_deps
     - script: |
         cp -a $(Pipeline.Workspace)/conan_deps/. /conan/
         mkdir build && cd build
