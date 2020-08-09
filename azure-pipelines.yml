@@ -57,13 +57,9 @@ stages:
         cp -a $(Pipeline.Workspace)/conan_deps/. /conan/
         mkdir build && cd build
         conan install -s compiler.libcxx=libstdc++11 --build=missing ..
-        cmake -DCMAKE_MODULE_PATH:FILE_PATH="$(pwd)" -DCMAKE_CXX_FLAGS="--coverage" -DCMAKE_CXX_OUTPUT_EXTENSION_REPLACE="1" ..
         cmake --build . --target all-tests
-        echo "Showing the generated shit"
-        ls -R
         ctest
         gcov *.cpp --object-directory coverage_dump/
-        gcovr -r .
         echo "Showing the generated shit"
         ls -R
       displayName: Running CTests
