@@ -35,7 +35,10 @@ stages:
   - job: "compile"
     container: "mattgomes28/wavytune:compx86_64"
     steps:
+    - download: current
+      artifact: conan_deps
     - script: |
+        cp -a $(Pipeline.Workspace)/conan_deps/. /conan/
         mkdir build && cd build
         conan install -s compiler.libcxx=libstdc++11 --build=missing ..
         cmake -DCMAKE_MODULE_PATH:FILE_PATH="$(pwd)" ..
@@ -49,6 +52,7 @@ stages:
     container: "mattgomes28/wavytune:compx86_64"
     steps:
     - script: |
+        cp -a $(Pipeline.Workspace)/conan_deps/. /conan/
         mkdir build && cd build
         conan install -s compiler.libcxx=libstdc++11 --build=missing ..
         cmake -DCMAKE_MODULE_PATH:FILE_PATH="$(pwd)" ..
