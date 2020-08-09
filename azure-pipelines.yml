@@ -61,6 +61,7 @@ stages:
         cmake --build . --target all-tests
         ctest
         gcov *.cpp --object-directory coverage_dump/
+        gcovr -r .
         echo "Showing the generated shit"
         ls -R
       displayName: Running CTests
