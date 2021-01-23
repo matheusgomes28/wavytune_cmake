@@ -3,6 +3,7 @@ project(wavy_tune VERSION 0.1 LANGUAGES CXX)
 
 add_subdirectory(data_structures)
 add_subdirectory(fourier)
+add_subdirectory(matrix)
 
 # Only build if the options were given
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
@@ -14,4 +15,4 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
 endif()
 
 add_executable(wavy_main source/main.cpp)
-target_link_libraries(wavy_main PRIVATE fourier data_structures)
+target_link_libraries(wavy_main PRIVATE fourier data_structures matrix)

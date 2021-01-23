@@ -6,7 +6,7 @@ inline std::complex<double> get_from_basis(const std::vector<std::complex<double
 	return N < basis_size ? basis[N] : - basis[N - basis_size];
 }
 
-Matrix<std::complex<double>> get_multiplier(std::size_t N)
+wt::Matrix<std::complex<double>> get_multiplier(std::size_t N)
 {
     const auto i = std::complex<double>(0, 1);
 
@@ -23,7 +23,7 @@ Matrix<std::complex<double>> get_multiplier(std::size_t N)
 	}
 	
 	// Generating the multiplier matrix
-	Matrix<std::complex<double>> multiplier{ N,N };
+	wt::Matrix<std::complex<double>> multiplier{ N,N };
 	for (std::size_t i = 0; i < N; ++i)
 	{
 		auto row = multiplier[i];
@@ -75,7 +75,7 @@ std::vector<std::size_t> partition_indices(const signal& input, const std::vecto
 	return g_index;
 }
 
-Matrix<std::complex<double>> fft_helper(const signal& input, const std::vector<FFT_PARTITION>& partition_order)
+wt::Matrix<std::complex<double>> fft_helper(const signal& input, const std::vector<FFT_PARTITION>& partition_order)
 {
 	// Need something to make sure that the length
 	// is a power of 2
@@ -89,12 +89,12 @@ Matrix<std::complex<double>> fft_helper(const signal& input, const std::vector<F
 		std::vector<FFT_PARTITION> odd_partition_order{ partition_order };
 		odd_partition_order.push_back(FFT_PARTITION::ODD);
 
-		Matrix<std::complex<double>> even = fft_helper(input, even_partition_order);
-		Matrix<std::complex<double>> odd = fft_helper(input, odd_partition_order);
+		wt::Matrix<std::complex<double>> even = fft_helper(input, even_partition_order);
+		wt::Matrix<std::complex<double>> odd = fft_helper(input, odd_partition_order);
 
 		// Combine the results
 		const std::size_t N = (input.size() / half_divisor);
-		Matrix<std::complex<double>> ret{ N , 1 };
+		wt::Matrix<std::complex<double>> ret{ N , 1 };
 		
 		// Get the basis components for the multipliers
 		// of the smaller transforms
@@ -130,13 +130,13 @@ Matrix<std::complex<double>> fft_helper(const signal& input, const std::vector<F
 	}
 }
 
-Matrix<std::complex<double>> slow_fft(const signal& input)
+wt::Matrix<std::complex<double>> slow_fft(const signal& input)
 {
-	Matrix<std::complex<double>> multiplier = get_multiplier(input.size());
+	wt::Matrix<std::complex<double>> multiplier = get_multiplier(input.size());
 	return multiplier * input;
 }
 
-Matrix<std::complex<double>> fast_fft(const signal& input)
+wt::Matrix<std::complex<double>> fast_fft(const signal& input)
 {
 	return fft_helper(input, {});
 }

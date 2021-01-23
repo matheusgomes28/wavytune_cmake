@@ -2,7 +2,7 @@
 #define FOURIER_SLOW_FFT_H
 
 // Includes from this project
-#include "matrix.h"
+#include <matrix/matrix.h>
 
 // Includes from the std
 #include <cmath>
@@ -20,13 +20,13 @@ enum class FFT_PARTITION : char
 	EVEN
 };
 
-Matrix<std::complex<double>> slow_fft(const signal& window);
+wt::Matrix<std::complex<double>> slow_fft(const signal& window);
 std::vector<std::size_t> partition_indices(const signal& in, std::vector<FFT_PARTITION>& order);
-Matrix<std::complex<double>> fast_fft(const signal& input);
+wt::Matrix<std::complex<double>> fast_fft(const signal& input);
 
 // TODO : This should be in the matrix  project
 template <typename T, typename U>
-Matrix<T> apply(std::function<T(const U&)> f, const Matrix<U>& m)
+wt::Matrix<T> apply(std::function<T(const U&)> f, const wt::Matrix<U>& m)
 {
 	Matrix<T> result{m.n_rows(), m.n_cols()};
 	for (std::size_t i = 0; i < m.n_rows(); ++i)
