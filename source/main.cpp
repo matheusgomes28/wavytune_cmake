@@ -1,4 +1,5 @@
 // #include <data_structures/byte_array.h>
+#include <data_structures/bytes.h>
 #include <fourier/matrix.h>
 // #include <gl_abstractions/vao.h>
 #include <iostream>
@@ -9,6 +10,8 @@ int main()
 	Matrix<double> hello{2,2};
 	// ByteArray hello2(20);
 
-  std::cout << "Hello World!" << std::endl;
+	wt::ByteArray<10> hello1{ 10, 10, 10, 10, 10, 10, 10, 10, 10, 10 };
+
+    std::cout << "Hello World!" << std::endl;
 	return 0;
 }

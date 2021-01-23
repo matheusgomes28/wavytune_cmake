@@ -5,7 +5,7 @@ class WavyTuneConan(ConanFile):
 	settings = ("os", "compiler", "build_type", "arch")
 	generators = ("cmake_find_package")
 	requires = (
-		"glew/2.1.0@bincrafters/stable",
+		"glew/2.1.0",
 		"glfw/3.3.2",
 		"glm/0.9.9.8",
 		"gtest/1.10.0",

@@ -14,4 +14,4 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
 endif()
 
 add_executable(wavy_main source/main.cpp)
-target_link_libraries(wavy_main fourier)
+target_link_libraries(wavy_main PRIVATE fourier data_structures)
