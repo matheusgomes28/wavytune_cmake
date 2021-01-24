@@ -1,3 +1,6 @@
+#ifndef GRAPHICS_CAMERA_H
+#define GRAPHICS_CAMERA_H
+
 #include <glm/glm.hpp>
 
 namespace wt
@@ -17,3 +20,5 @@ namespace wt
 		glm::vec3 up;
 	};
 } // namespace wt
+
+#endif // GRAPHICS_CAMERA_H
