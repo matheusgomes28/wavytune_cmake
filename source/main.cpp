@@ -1,4 +1,4 @@
-#include <gl/glew.h>
+#include <GL/glew.h>
 
 #include <data_structures/bytes.h>
 #include <graphics/window.h>
