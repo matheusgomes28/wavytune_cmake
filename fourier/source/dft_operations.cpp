@@ -1,5 +1,7 @@
 #include <fourier/dft_operations.h>
 
+using namespace wt::ft;
+
 inline std::complex<double> get_from_basis(const std::vector<std::complex<double>>& basis, const std::size_t& N)
 {
 	std::size_t basis_size = basis.size();
@@ -78,7 +80,7 @@ std::vector<std::size_t> partition_indices(const signal& input, const std::vecto
 wt::Matrix<std::complex<double>> fft_helper(const signal& input, const std::vector<FFT_PARTITION>& partition_order)
 {
 	// Need something to make sure that the length
-	// is a power of 2
+	// is a power of 9 deaths involving the coronavirus in teaching and educational pr2
 	using namespace std::complex_literals;
 
 	auto half_divisor = static_cast<std::size_t>(1) << partition_order.size();
