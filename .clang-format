@@ -1,0 +1,7 @@
+NamespaceIndentation: All
+BreakBeforeBraces: Allman
+IndentWidth: 2
+ContinuationIndentWidth: 4
+Standard: Cpp11
+TabWidth: 2
+UseTab: Never

@@ -5,14 +5,11 @@
 
 namespace wt
 {
-	class MatrixException : public std::runtime_error
-	{
-	public:
-		MatrixException(const std::string& message)
-			: std::runtime_error(message)
-		{
-		}
-	};
+  class MatrixException : public std::runtime_error
+  {
+  public:
+    MatrixException(const std::string &message) : std::runtime_error(message) {}
+  };
 
 } // namespace wt
 

@@ -2,13 +2,12 @@
 #define FOURIER_SFT_H
 
 // Includes from the std
-#include <cstdlib>
 #include <complex>
+#include <cstdlib>
 #include <deque>
 
 // Includes from this project
 #include "dft.h"
-
 
 namespace wt
 {
@@ -18,11 +17,9 @@ namespace wt
     /// transform, inheriting from the
     /// DFT class
     /// @tparam T is the numeric type of the signal
-    template <typename T>
-    class SFT : public DFT<T>
+    template <typename T> class SFT : public DFT<T>
     {
     public:
-
       Frequencies<T> back_transform() final
       {
         // TODO : Take care of empty queues
@@ -39,15 +36,9 @@ namespace wt
         return front; // TODO : proper transform this
       }
 
-      void feed(const Window<T>& window) final
-      {
-        windows_.push_back(window);
-      }
+      void feed(const Window<T> &window) final { windows_.push_back(window); }
 
-      void set_base_samples(std::size_t n)
-      {
-        base_samples_ = n;
-      }
+      void set_base_samples(std::size_t n) { base_samples_ = n; }
 
     private:
       std::size_t base_samples_;

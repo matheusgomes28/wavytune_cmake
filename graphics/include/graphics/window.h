@@ -7,11 +7,11 @@
 
 namespace wt
 {
-	bool window_init();
+  bool window_init();
 
-	GLFWwindow* create_window(int width, int height, std::string const& title);
+  GLFWwindow *create_window(int width, int height, std::string const &title);
 
-	void window_uninit();
+  void window_uninit();
 } // namespace wt
 
 #endif // GRAPHICS_WINDOW_H
