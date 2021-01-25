@@ -1,6 +1,6 @@
-find_package(glew REQUIRED)
+find_package(GLEW REQUIRED)
 find_package(glm REQUIRED)
-find_package(glfw REQUIRED)
+find_package(glfw3 REQUIRED)
 find_package(Microsoft.GSL REQUIRED)
 
 add_library(graphics
@@ -12,8 +12,8 @@ add_library(graphics
 target_include_directories(graphics PUBLIC include)
 
 target_link_libraries(graphics PUBLIC 
+  GLEW::GLEW
 	data_structures
-	glew::glew
 	glm::glm
 	glfw::glfw)
 

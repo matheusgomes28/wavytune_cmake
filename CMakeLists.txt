@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(wavy_tune VERSION 0.1 LANGUAGES CXX)
 
-find_package(glew REQUIRED)
-find_package(glfw REQUIRED)
+find_package(GLEW REQUIRED)
 
 add_subdirectory(data_structures)
 add_subdirectory(fourier)
@@ -19,9 +18,9 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
 endif()
 
 add_executable(wavy_main source/main.cpp)
-target_link_libraries(wavy_main PRIVATE 
+target_link_libraries(wavy_main PRIVATE
+    GLEW::GLEW
     data_structures
     fourier
-    glew::glew
     graphics
     matrix)
