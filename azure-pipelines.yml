@@ -16,7 +16,7 @@ stages:
   displayName: Conan Dependencies X86_64
   jobs:
   - job: "pullingDependencies"
-    container: "mattgomes28/wavytune:comp86_64v2"
+    container: "mattgomes28/wavytune:compx86_64v1"
     steps:
     - script: |
         mkdir build && cd build
@@ -33,7 +33,7 @@ stages:
 
   jobs:
   - job: "compile"
-    container: "mattgomes28/wavytune:comp86_64v2"
+    container: "mattgomes28/wavytune:compx86_64v1"
     steps:
     - download: current
       artifact: conan_deps
@@ -49,7 +49,7 @@ stages:
   displayName: Testing x86_64 build
   jobs:
   - job: "test"
-    container: "mattgomes28/wavytune:comp86_64v2"
+    container: "mattgomes28/wavytune:compx86_64v1"
     steps:
     - download: current
       artifact: conan_deps
