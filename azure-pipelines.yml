@@ -20,7 +20,7 @@ stages:
     steps:
     - script: |
         mkdir build && cd build
-        conan install -pr ../helpers/conan/profiles/x86_64_gcc7_ubuntu_debug --build=missing ..
+        ../helpers/conan/conan-install-ubuntu.sh
         mkdir $(System.DefaultWorkingDirectory)/conan_artifacts
         cp -a /conan/. $(System.DefaultWorkingDirectory)/conan_artifacts/
     - publish: $(System.DefaultWorkingDirectory)/conan_artifacts
@@ -40,7 +40,7 @@ stages:
     - script: |
         cp -a $(Pipeline.Workspace)/conan_deps/. /conan/
         mkdir build && cd build
-        conan install -pr ../helpers/conan/profiles/x86_64_gcc7_ubuntu_debug --build=missing ..
+        ../helpers/conan/conan-install-ubuntu.sh
         cmake -DCMAKE_MODULE_PATH:FILE_PATH="$(pwd)" ..
         cmake --build .
       displayName: "Building with CMake"
@@ -56,7 +56,7 @@ stages:
     - script: |
         cp -a $(Pipeline.Workspace)/conan_deps/. /conan/
         mkdir build && cd build
-        conan install -pr ../helpers/conan/profiles/x86_64_gcc7_ubuntu_debug --build=missing ..
+        ../helpers/conan/conan-install-ubuntu.sh
         cmake --build . --target all-tests
         ctest
         gcov *.cpp --object-directory coverage_dump/
