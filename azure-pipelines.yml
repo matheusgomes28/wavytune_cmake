@@ -17,6 +17,7 @@ stages:
   jobs:
   - job: "pullingDependencies"
     container: "mattgomes28/wavytune:compx86_64v2"
+    continueOnError: "false"
     steps:
     - script: |
         mkdir build && cd build
