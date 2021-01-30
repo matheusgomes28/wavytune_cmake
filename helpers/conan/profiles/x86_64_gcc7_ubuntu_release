@@ -1,0 +1,9 @@
+[settings]
+build_type=Release
+compiler=gcc
+compiler.version=7
+compiler.libcxx=libstdc++11
+
+[env]
+CC=/usr/bin/gcc
+CXX=/usr/bin/g++
