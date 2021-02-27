@@ -6,7 +6,7 @@
 
 set -euo pipefail
 
-PROJECT_DIR=$(cd "$(dirname "$0")/.." && pwd)
+PROJECT_DIR=$(cd "$(dirname "$0")/../../" && pwd)
 PROFILES_DIR="${PROJECT_DIR}/helpers/conan/profiles"
 
-conan install -pr "${PROFILES_DIR}/x86_64_ubuntu_debug" --build=missing "${PROJECT_DIR}"
+conan install -pr "${PROFILES_DIR}/x86_64_gcc7_ubuntu_debug" --build=missing "${PROJECT_DIR}"

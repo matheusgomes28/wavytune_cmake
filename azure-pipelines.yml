@@ -33,7 +33,7 @@ stages:
     - script: |
         set -euo pipefail
         mkdir build && cd build
-        ../helpers/conan/conan-install-ubuntu.sh
+        ../helpers/conan/conan-install-ubuntu-debug.sh
         mkdir $(System.DefaultWorkingDirectory)/conan_artifacts
         cp -a /conan/. $(System.DefaultWorkingDirectory)/conan_artifacts/
     - publish: $(System.DefaultWorkingDirectory)/conan_artifacts
