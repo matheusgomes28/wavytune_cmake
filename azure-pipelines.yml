@@ -12,6 +12,17 @@ name: $(Date:ddMMyyyy)$(Rev:.r)
 
 stages:
 
+- stage: failfast
+  displayName: Fail Fast Scripts
+  jobs:
+  - job: "failfast"
+    container: "mattgomes28/wavytune:compx86_64v3"
+    continueOnError: "false"
+    steps:
+    - script: |
+        set -euo pipefail
+        ./helpers/lint-shell.sh
+
 - stage: conan_x86_64
   displayName: Conan Dependencies X86_64
   jobs:
@@ -20,6 +31,7 @@ stages:
     continueOnError: "false"
     steps:
     - script: |
+        set -euo pipefail
         mkdir build && cd build
         ../helpers/conan/conan-install-ubuntu.sh
         mkdir $(System.DefaultWorkingDirectory)/conan_artifacts
@@ -39,6 +51,7 @@ stages:
     - download: current
       artifact: conan_deps
     - script: |
+        -set euo pipefail
         cp -a $(Pipeline.Workspace)/conan_deps/. /conan/
         mkdir build && cd build
         ../helpers/conan/conan-install-ubuntu.sh
@@ -55,6 +68,7 @@ stages:
     - download: current
       artifact: conan_deps
     - script: |
+        -set euo pipefail
         cp -a $(Pipeline.Workspace)/conan_deps/. /conan/
         mkdir build && cd build
         ../helpers/conan/conan-install-ubuntu.sh
