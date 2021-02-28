@@ -31,6 +31,13 @@ RUN apt-get install libxcb-xinerama0-dev -y
 RUN apt-get install libglu1-mesa-dev -y
 RUN apt-get install libjack-dev -y
 RUN apt-get install libxcb-util-dev -y
+RUN apt-get -y install libx11-xcb-dev
+RUN apt-get -y install libxcb-dri3-dev
+RUN apt-get -y install libxcb-randr0-dev
+RUN apt-get -y install libxcb-shape0-dev
+RUN apt-get -y install libxcb-sync-dev
+RUN apt-get -y install libxcb-xfixes0-dev
+RUN apt-get -y install xkb-data
 
 #
 # Install the necessary conan stuff

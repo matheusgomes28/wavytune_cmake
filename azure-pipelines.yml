@@ -16,7 +16,7 @@ stages:
   displayName: Fail Fast Scripts
   jobs:
   - job: "failfast"
-    container: "mattgomes28/wavytune:compx86_64v3"
+    container: "mattgomes28/wavytune:compx86_64v4"
     continueOnError: "false"
     steps:
     - script: |
@@ -27,7 +27,7 @@ stages:
   displayName: Conan Dependencies X86_64
   jobs:
   - job: "pullingDependencies"
-    container: "mattgomes28/wavytune:compx86_64v3"
+    container: "mattgomes28/wavytune:compx86_64v4"
     continueOnError: "false"
     steps:
     - script: |
@@ -46,7 +46,7 @@ stages:
 
   jobs:
   - job: "compile"
-    container: "mattgomes28/wavytune:compx86_64v3"
+    container: "mattgomes28/wavytune:compx86_64v4"
     steps:
     - download: current
       artifact: conan_deps
@@ -54,7 +54,7 @@ stages:
         -set euo pipefail
         cp -a $(Pipeline.Workspace)/conan_deps/. /conan/
         mkdir build && cd build
-        ../helpers/conan/conan-install-ubuntu.sh
+        ../helpers/conan/conan-install-ubuntu-debug.sh
         cmake -DCMAKE_MODULE_PATH:FILE_PATH="$(pwd)" ..
         cmake --build .
       displayName: "Building with CMake"
@@ -63,7 +63,7 @@ stages:
   displayName: Testing x86_64 build
   jobs:
   - job: "test"
-    container: "mattgomes28/wavytune:compx86_64v3"
+    container: "mattgomes28/wavytune:compx86_64v4"
     steps:
     - download: current
       artifact: conan_deps
@@ -71,7 +71,7 @@ stages:
         -set euo pipefail
         cp -a $(Pipeline.Workspace)/conan_deps/. /conan/
         mkdir build && cd build
-        ../helpers/conan/conan-install-ubuntu.sh
+        ../helpers/conan/conan-install-ubuntu-debug.sh
         cmake --build . --target all-tests
         ctest
         gcov *.cpp --object-directory coverage_dump/
