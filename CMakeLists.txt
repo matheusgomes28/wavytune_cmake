@@ -3,6 +3,7 @@ project(wavy_tune VERSION 0.1 LANGUAGES CXX)
 
 find_package(GLEW REQUIRED)
 
+
 add_subdirectory(data_structures)
 add_subdirectory(fourier)
 add_subdirectory(graphics)
