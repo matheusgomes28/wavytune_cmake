@@ -1,8 +1,13 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.16)
 project(wavy_tune VERSION 0.1 LANGUAGES CXX)
 
 find_package(GLEW REQUIRED)
 
+if (WIN32)
+    set(MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
+include(external/PortAudio.cmake)
 
 add_subdirectory(data_structures)
 add_subdirectory(fourier)

@@ -9,8 +9,7 @@ class WavyTuneConan(ConanFile):
 		"glfw/3.3.2",
 		"glm/0.9.9.8",
 		"gtest/1.10.0",
-		"ms-gsl/3.1.0",
-		"portaudio/v190600.20161030@bincrafters/stable",
+		"ms-gsl/3.1.0"
 		)
 
 
