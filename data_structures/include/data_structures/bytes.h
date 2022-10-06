@@ -11,7 +11,8 @@ namespace wt
   /// it seemed like the best cross-platform representation
   /// for uninterpreted bits. std::byte looked great but it has
   /// very bad support and clashes with WinRT.
-  using Byte = std::uint8_t;
+  // using Byte = std::uint8_t;
+  using Byte = char;
 
   template <int N> using ByteArray = std::array<Byte, N>;
 
