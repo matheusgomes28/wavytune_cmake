@@ -9,22 +9,37 @@
 #include <glm/glm.hpp>
 #include <GL/glew.h>
 
-class AbstractShader;
-class VertexShader;
-class FragmentShader;
-class GeometryShader;
+struct Shader;
+
+struct ShaderProgram
+{
+	std::unique_ptr<Shader> vertex_shader;
+	std::unique_ptr<Shader> fragment_shader;
+	std::unique_ptr<Shader> geometry_shader;
+	GLuint address;
+};
+
+void set_uniform(ShaderProgram const& program, const std::string& name, const int& value);
+void set_uniform(ShaderProgram const& program, const std::string& name, const unsigned int& value);
+void set_uniform(ShaderProgram const& program, const std::string& name, const float& value);
+void set_uniform(ShaderProgram const& program, const std::string& name, const double& value);
+void set_uniform(ShaderProgram const& program, const std::string& name, const glm::vec2& value);
+void set_uniform(ShaderProgram const& program, const std::string& name, const glm::vec3& value);
+void set_uniform(ShaderProgram const& program, const std::string& name, const glm::mat4& value);
+
+void compile_and_link(ShaderProgram const&);
+void use();
+void unuse();
+
+GLuint get_address() const;
+
+
 class ShaderProgram
 {
 
 public:
 	
 	~ShaderProgram();
-
-	// Setting the stuff
-	void set_vertex_shader(std::unique_ptr<VertexShader> vs);
-	void set_geometry_shader(std::unique_ptr<GeometryShader> gs);
-	void set_fragment_shader(std::unique_ptr<FragmentShader> fs);
-
 
 	// Uniform setting stuff
 	void set_uniform(const std::string& name, const int& value) const;
@@ -44,9 +59,9 @@ public:
 private:
 
 	// The shaders we have
-	std::unique_ptr<VertexShader> vs_;
-	std::unique_ptr<GeometryShader> gs_;
-	std::unique_ptr<FragmentShader> fs_;
+	std::unique_ptr<Shader> vs_;
+	std::unique_ptr<Shader> gs_;
+	std::unique_ptr<Shader> fs_;
 
 	// Gl related stuff
 	GLuint address_ = 0;

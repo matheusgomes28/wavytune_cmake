@@ -1,8 +1,6 @@
 // Includes from this project
 #include "shaders/shader_program.h"
-#include "shaders/vertex_shader.h"
-#include "shaders/fragment_shader.h"
-#include "shaders/geometry_shader.h"
+#include "shaders/shader.h"
 
 // Includes from the STD
 #include <exception>
@@ -11,33 +9,40 @@
 // Includes from third party
 #include <glm/gtc/type_ptr.hpp>
 
-void ShaderProgram::set_fragment_shader(std::unique_ptr<FragmentShader> fs)
+namespace
 {
-	fs_ = std::move(fs);
-}
+	GLuint generate_address() const
+	{
+		return glCreateProgram();
+	}
+	
+	bool compile_shader(Shader&)
+	{
+		// Check if this shader has already been
+		// allocated in the GPU, if so, delete it
+		if (address_ != 0)
+		{
+			glDeleteShader(address_);
+		}
 
-void ShaderProgram::set_geometry_shader(std::unique_ptr<GeometryShader> gs)
+		address_ = glCreateShader(_get_shader_type());
+		if (address_ != 0)
+		{
+			auto str_data = data_.data();
+			int data_size = data_.size();
+			glShaderSource(address_, 1, &str_data, &data_size);
+			glCompileShader(address_);
+		}
+		else
+		{
+			throw ShaderException("could not allocate a shader");
+		}
+	}
+} // namespace
+
+bool compile_and_link(ShaderProgram const& shader_program)
 {
-	gs_ = std::move(gs);
-}
-
-void ShaderProgram::set_vertex_shader(std::unique_ptr<VertexShader> vs)
-{
-	vs_ = std::move(vs);
-}
-
-GLuint ShaderProgram::_generate_address() const
-{
-	return glCreateProgram();
-}
-
-void ShaderProgram::compile_and_link()
-{
-	// Generate the address for this program
-	address_ = _generate_address();
-
-	// Compile all the shaders, generating the
-	// OpenGL address_
+	address = generate_address();
 
 	_compile_if_necessary(*vs_);
 	if (gs_) _compile_if_necessary(*gs_);
