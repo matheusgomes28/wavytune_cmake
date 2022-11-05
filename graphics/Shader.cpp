@@ -45,8 +45,10 @@ bool Shader::compile()
   }
   else
   {
-    throw ShaderException("could not allocate a shader");
+    return false;
   }
+
+  return true;
 }
 
 void Shader::flag_delete()

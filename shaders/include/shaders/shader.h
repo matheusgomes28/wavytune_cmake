@@ -8,6 +8,8 @@
 #include <string>
 #include <stdexcept>
 
+#include <GL/glew.h>
+
 enum class ShaderType
 {
 	VERTEX,
@@ -15,9 +17,9 @@ enum class ShaderType
 	GEOMETRY
 };
 
-struct Shader {
+struct ShaderData {
 	ShaderType type;
-	std::vector<char> data;
+	std::vector<char> glsl;
 };
 
 #endif //SHADERS_ABSRACT_SHADER_H

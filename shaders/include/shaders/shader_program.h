@@ -1,75 +1,65 @@
 #ifndef SHADER_SHADER_PROGRAM_H
 #define SHADER_SHADER_PROGRAM_H
 
+#include "shaders/shader.h"
+
 // Includes from the STD
 #include <memory>
+#include <optional>
 #include <string>
 
 // Includes from third party
 #include <glm/glm.hpp>
 #include <GL/glew.h>
 
-struct Shader;
-
-struct ShaderProgram
+struct CompiledShader
 {
-	std::unique_ptr<Shader> vertex_shader;
-	std::unique_ptr<Shader> fragment_shader;
-	std::unique_ptr<Shader> geometry_shader;
 	GLuint address;
 };
 
-void set_uniform(ShaderProgram const& program, const std::string& name, const int& value);
-void set_uniform(ShaderProgram const& program, const std::string& name, const unsigned int& value);
-void set_uniform(ShaderProgram const& program, const std::string& name, const float& value);
-void set_uniform(ShaderProgram const& program, const std::string& name, const double& value);
-void set_uniform(ShaderProgram const& program, const std::string& name, const glm::vec2& value);
-void set_uniform(ShaderProgram const& program, const std::string& name, const glm::vec3& value);
-void set_uniform(ShaderProgram const& program, const std::string& name, const glm::mat4& value);
-
-void compile_and_link(ShaderProgram const&);
-void use();
-void unuse();
-
-GLuint get_address() const;
-
-
-class ShaderProgram
+struct ShaderProgram
 {
-
-public:
-	
-	~ShaderProgram();
-
-	// Uniform setting stuff
-	void set_uniform(const std::string& name, const int& value) const;
-	void set_uniform(const std::string& name, const unsigned int& value) const;
-	void set_uniform(const std::string& name, const float& value) const;
-	void set_uniform(const std::string& name, const double& value) const;
-	void set_uniform(const std::string& name, const glm::vec2& value) const;
-	void set_uniform(const std::string& name, const glm::vec3& value) const;
-	void set_uniform(const std::string& name, const glm::mat4& value) const;
-
-	void compile_and_link();
-	void use();
-	void unuse();
-
-	GLuint get_address() const;
-
-private:
-
-	// The shaders we have
-	std::unique_ptr<Shader> vs_;
-	std::unique_ptr<Shader> gs_;
-	std::unique_ptr<Shader> fs_;
-
-	// Gl related stuff
-	GLuint address_ = 0;
-
-	GLuint _generate_address() const;
-	void _compile_if_necessary(AbstractShader& s);
-	void _attach_shaders();
-	void _link_shaders();
-	void _detatch_shaders();
+	CompiledShader vertex_shader;
+	CompiledShader fragment_shader;
+	CompiledShader geometry_shader;
+	GLuint address;
 };
+
+std::optional<ShaderProgram> create_shader_program(ShaderData const& vertex_shader,
+  ShaderData const& fragment_shader);
+
+bool set_uniform(ShaderProgram const& program,
+  const std::string& name,
+  const int& value);
+
+bool set_uniform(ShaderProgram const& program,
+  const std::string& name,
+  const unsigned int& value);
+
+bool set_uniform(ShaderProgram const& program,
+  const std::string& name,
+  const float& value);
+
+bool set_uniform(ShaderProgram const& program,
+  const std::string& name,
+  const double& value);
+
+bool set_uniform(ShaderProgram const& program,
+  const std::string& name,
+  const glm::vec2& value);
+
+bool set_uniform(ShaderProgram const& program,
+  const std::string& name,
+  const glm::vec3& value);
+
+bool set_uniform(ShaderProgram const& program,
+  const std::string& name,
+  const glm::mat4& value);
+
+bool compile_and_link(ShaderProgram const& shader_program);
+
+bool use_shader_program(ShaderProgram const& shader_program);
+
+bool unuse_shader_program(ShaderProgram const& shader_program);
+
 #endif // SHADER_SHADER_PROGRAM_H
