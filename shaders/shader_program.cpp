@@ -28,6 +28,8 @@ namespace
 					return GL_FRAGMENT_SHADER;
 				case ShaderType::GEOMETRY:
 					return GL_GEOMETRY_SHADER;
+				default:
+					return GL_VERTEX_SHADER;
 			}
 		}();
 		
@@ -47,7 +49,7 @@ namespace
 			}
 		}
 
-		return std::make_optional<CompiledShader>(address);
+		return CompiledShader{address};
 	}
 
 	bool attach_shaders(ShaderProgram const& shader_program)
@@ -260,7 +262,7 @@ bool set_uniform(ShaderProgram const& shader_program,
 	const auto address = shader_program.address;
 	if (address > 0) {
 		int uniformLoc = glGetUniformLocation(address, name.c_str());
-		glUniform1d(uniformLoc, value);
+		// glUniform1d(uniformLoc, value);
 		// TODO : check for errors before we return true
 		return true;
 	}

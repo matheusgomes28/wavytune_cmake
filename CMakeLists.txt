@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
 set(CMAKE_CXX_EXTENSIONS Off)
 
-find_package(GLEW REQUIRED)
+find_package(glad REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 
@@ -33,7 +33,7 @@ endif()
 
 add_executable(wavy_main source/main.cpp)
 target_link_libraries(wavy_main PRIVATE
-    GLEW::GLEW
+    glad::glad
     data_structures
     fourier
     graphics

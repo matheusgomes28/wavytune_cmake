@@ -1,4 +1,4 @@
-#include <GL/glew.h>
+#include <glad/glad.h>
 
 #include <data_structures/bytes.h>
 #include <graphics/window.h>
@@ -13,8 +13,6 @@ void resize_callback(GLFWwindow *window, int width, int height)
 
 int main()
 {
-  glewInit();
-
   wt::window_init();
   auto window = wt::create_window(800, 600, "Testing");
   if (!window)
@@ -24,7 +22,6 @@ int main()
   }
 
   // Attach viewport
-  glewInit();
   glViewport(0, 0, 800, 600);
   glfwSetFramebufferSizeCallback(window, resize_callback);
   glfwMakeContextCurrent(window);

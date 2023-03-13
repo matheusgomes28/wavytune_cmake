@@ -10,7 +10,7 @@
 
 // Includes from third party
 #include <glm/glm.hpp>
-#include <GL/glew.h>
+#include <glad/glad.h>
 
 struct CompiledShader
 {
@@ -39,10 +39,6 @@ bool set_uniform(ShaderProgram const& program,
 bool set_uniform(ShaderProgram const& program,
   const std::string& name,
   const float& value);
-
-bool set_uniform(ShaderProgram const& program,
-  const std::string& name,
-  const double& value);
 
 bool set_uniform(ShaderProgram const& program,
   const std::string& name,

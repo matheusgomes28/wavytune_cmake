@@ -1,8 +1,12 @@
 #include <string>
 #include <iostream>
-#include <GL/glew.h>
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "shaders/shader_program.h"
+
+
+// Still need to port these
+/*
 #include "graphics/draw_buffer.h"
 #include "graphics/draw_data2.h"
 #include "graphics/draw_data3.h"
@@ -11,12 +15,8 @@
 #include "Renderer/concrete_renderer.h"
 #include "render_builder.h"
 
-#include "Shaders/vs.glsl.h"
-#include "Shaders/vs_test.glsl.h"
-#include "Shaders/fs.glsl.h"
-#include "Shaders/fs_test.glsl.h"
-
 #include "DataStructures/byte_array.h"
+*/
 
 #include <thread>
 #include <complex>
@@ -79,15 +79,11 @@ static int patestCallback(const void* input_buffer, void* output_buffer,
 	return 0;
 }
 
-
-
 template<class T, size_t N>
 constexpr size_t size(T(&)[N])
 {
 	return N;
 }
-
-
 
 // More testing for why things arent working
 #include <glm/glm.hpp>

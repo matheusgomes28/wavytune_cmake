@@ -1,7 +1,7 @@
 #include <graphics/Shader.h>
 #include <graphics/ShaderProgram.h>
 
-#include <GL/glew.h>
+#include <glad/glad.h>
 #include <gsl/gsl_assert>
 
 #include <iostream>

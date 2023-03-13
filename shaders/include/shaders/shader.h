@@ -8,8 +8,6 @@
 #include <string>
 #include <stdexcept>
 
-#include <GL/glew.h>
-
 enum class ShaderType
 {
 	VERTEX,
