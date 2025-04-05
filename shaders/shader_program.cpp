@@ -104,7 +104,7 @@ namespace
 
 // ShaderProgram needs the shaders to be compiled
 // at the moment!
-bool compile_and_link(ShaderProgram const& shader_program)
+bool compile_and_link(ShaderProgram& shader_program)
 {
 
 	auto& vertex_shader = shader_program.vertex_shader;
@@ -125,7 +125,7 @@ bool compile_and_link(ShaderProgram const& shader_program)
 		return false;
 	}
 
-	auto const address = generate_address();
+	shader_program.address = generate_address();
 
 	// TODO : print some stupid error messages on failures
 	if (!attach_shaders(shader_program))
@@ -146,16 +146,6 @@ bool compile_and_link(ShaderProgram const& shader_program)
 	return true;
 }
 
-/*
-void ShaderProgram::_compile_if_necessary(AbstractShader& s)
-{
-	if (s.get_address() == 0)
-	{
-		s.compile();
-	}
-}
-*/
-
 bool use_shader_program(ShaderProgram const& program)
 {
 	if (program.address != 0) {
@@ -165,7 +155,7 @@ bool use_shader_program(ShaderProgram const& program)
 	return false;
 }
 
-bool unuse_shader_program(ShaderProgram const& program)
+bool unuse_shader_program(ShaderProgram const& /* program */)
 {
 	glUseProgram(0);
 	return true;

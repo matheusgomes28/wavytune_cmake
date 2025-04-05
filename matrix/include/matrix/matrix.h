@@ -17,7 +17,7 @@ namespace wt
 
   public:
     Matrix_T(std::size_t n_rows, std::size_t n_cols)
-        : n_rows_{n_rows}, n_cols_{n_cols}, data_ptr_{new T[n_rows * n_cols]}
+        : data_ptr_{new T[n_rows * n_cols]}, n_rows_{n_rows}, n_cols_{n_cols}
     {
       for (std::size_t row = 0; row < n_rows_; ++row)
       {
@@ -29,7 +29,7 @@ namespace wt
     }
 
     Matrix_T(const Matrix_T &cp)
-        : data_ptr_{nullptr}, n_cols_{cp.n_cols_}, n_rows_{cp.n_rows_}
+        : data_ptr_{nullptr}, n_rows_{cp.n_rows_}, n_cols_{cp.n_cols_}
     {
       std::size_t data_size = cp.n_rows_ * cp.n_cols_;
       data_ptr_ = new T[data_size];

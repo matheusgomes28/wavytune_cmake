@@ -2,19 +2,15 @@
 #define SHADERS_SHADER_BUILDER_H
 
 
-// Includes from DataStructures
-#include <data_structures/bytes.h>
-
 // Includes from Shaders
-#include "fragment_shader.h"
-#include "geometry_shader.h"
-#include "vertex_shader.h"
-#include "shader_program.h"
+#include <shaders/shader.h>
 
 // Includes from the std
-#include <memory>
+#include <optional>
 #include <stdexcept>
+#include <string>
 
+struct ShaderProgram;
 
 class ShaderBuilderException : std::runtime_error
 {
@@ -29,23 +25,18 @@ class ShaderBuilder
 {
 public:
 	ShaderBuilder();
+	~ShaderBuilder();
 
-	ShaderBuilder& set_vertex_shader(const wt::ByteArray<500>& data);
-	ShaderBuilder& set_vertex_shader(wt::ByteArray<500>&& data);
-	ShaderBuilder& set_vertex_shader(std::unique_ptr<VertexShader> vs);
+	ShaderBuilder& set_vertex_shader(std::string const& path);
+	ShaderBuilder& set_fragment_shader(std::string const& path);
+	ShaderBuilder& set_geometry_shader(std::string const& path);
 
-	ShaderBuilder& set_fragment_shader(const wt::ByteArray<500>& data);
-	ShaderBuilder& set_fragment_shader(wt::ByteArray<500>&& data);
-	ShaderBuilder& set_fragment_shader(std::unique_ptr<FragmentShader> fs);
-
-	ShaderBuilder& set_geometry_shader(const wt::ByteArray<500>& data);
-	ShaderBuilder& set_geometry_shader(wt::ByteArray<500>&& data);
-	ShaderBuilder& set_geometry_shader(std::unique_ptr<GeometryShader> vs);
-
-	std::unique_ptr<ShaderProgram> build();
+	std::optional<ShaderProgram> build();
 
 private:
-	std::unique_ptr<ShaderProgram> shader_program_;
+	std::optional<ShaderData> vertex_shader_;
+	std::optional<ShaderData> geometry_shader_;
+	std::optional<ShaderData> fragment_shader_;
 };
 
 #endif // SHADERS_SHADER_BUILDER_H

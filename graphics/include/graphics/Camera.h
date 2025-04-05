@@ -14,7 +14,7 @@ namespace wt
     glm::vec3 getRight() const;
 
   private:
-    glm::vec3 pos;
+    // glm::vec3 pos;
     glm::vec3 front;
     glm::vec3 right;
     glm::vec3 up;

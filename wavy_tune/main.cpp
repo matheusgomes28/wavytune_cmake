@@ -1,22 +1,36 @@
-#include <string>
-#include <iostream>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "shaders/shader_program.h"
-#include "graphics/draw_buffer.h"
-#include "graphics/draw_data2.h"
-#include "graphics/draw_data3.h"
-#include "graphics/entity.h"
 
-#include "Renderer/concrete_renderer.h"
-#include "render_builder.h"
+// More testing for why things arent working
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/glm.hpp>
+#include <glm/gtx/transform.hpp>
 
-#include "Shaders/vs.glsl.h"
-#include "Shaders/vs_test.glsl.h"
-#include "Shaders/fs.glsl.h"
-#include "Shaders/fs_test.glsl.h"
+#include <fourier/dft_operations.h>
 
-#include "DataStructures/byte_array.h"
+// #include "GLAbstractions/vao.h"
+// #include "GLAbstractions/vbo.h"
+// #include "GLAbstractions/vertex_attribute.h"
+
+#include <chrono>
+#include <cmath>
+#include <iostream>
+#include <mutex>
+
+// #include "graphics/draw_buffer.h"
+// #include "graphics/draw_data2.h"
+// #include "graphics/draw_data3.h"
+// #include "graphics/entity.h"
+// #include "Renderer/concrete_renderer.h"
+// #include "render_builder.h"
+
+// #include "Shaders/vs.glsl.h"
+// #include "Shaders/vs_test.glsl.h"
+// #include "Shaders/fs.glsl.h"
+// #include "Shaders/fs_test.glsl.h"
+
+// #include "DataStructures/byte_array.h"
 
 #include <thread>
 #include <complex>
@@ -45,8 +59,8 @@ static std::vector<std::complex<double>> buffer;
 
 static int patestCallback(const void* input_buffer, void* output_buffer,
 	unsigned long frames_per_buffer,
-	const PaStreamCallbackTimeInfo* time_info,
-	PaStreamCallbackFlags status_flag,
+	const PaStreamCallbackTimeInfo* /* time_info */,
+	PaStreamCallbackFlags /* status_flag */,
 	void* user_data)
 {
 	/* Cast data passed through stream to our structure. */
@@ -87,21 +101,6 @@ constexpr size_t size(T(&)[N])
 	return N;
 }
 
-
-
-// More testing for why things arent working
-#include <glm/glm.hpp>
-#include <glm/gtx/transform.hpp>
-
-#include <chrono>
-#include "Fourier/dft_operations.h"
-#include <cmath>
-
-
-#include "GLAbstractions/vao.h"
-#include "GLAbstractions/vbo.h"
-#include "GLAbstractions/vertex_attribute.h"
-
 struct Camera
 {
 	glm::vec3 pos;
@@ -129,7 +128,7 @@ struct Camera
 };
 
 
-void resizeCallback(GLFWwindow* window, int width, int height)
+void resizeCallback(GLFWwindow* /* window */, int width, int height)
 {
 	glViewport(0, 0, width, height);
 }
@@ -189,7 +188,7 @@ glm::vec3 rotateVector(const glm::vec3& vector, const glm::vec3& from, const AXI
 	}
 }
 
-void keyCallBack(GLFWwindow* window, int key, int scancode, int action, int mods)
+void keyCallBack(GLFWwindow* /* window */, int key, int /* scancode */, int action, int /* mods */)
 {
 	if (key == GLFW_KEY_W && action == GLFW_PRESS) {
 		cam.transform = glm::rotate(glm::radians(10.f), cam.getRight()) * cam.transform;
@@ -224,7 +223,7 @@ unsigned vertexBufferId = 0;
 unsigned normalBufferId = 0;
 
 //int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
-int main(int argc, char** argv)
+int main()
 {
 	using namespace std::chrono_literals;
 	std::chrono::high_resolution_clock c;
@@ -264,8 +263,10 @@ int main(int argc, char** argv)
 	{
 		return std::abs(v);
 	};
-	auto transform = fast_fft(signal);
-	auto result = apply(applier, transform);
+	auto transform = wt::ft::fast_fft(signal);
+	
+	// TODO : Where is this from?
+	// auto result = apply(applier, transform);
 	
 
 	glewExperimental = GL_TRUE;
@@ -312,15 +313,15 @@ int main(int argc, char** argv)
 	up = { 0, 1, 0 };
 
 	// Create a bar renderer
-	RenderBuilder builder;
+	// RenderBuilder builder;
 
-	std::vector<std::unique_ptr<ConcreteRenderer>> renderers;
-	for (std::size_t i = 0; i < result.n_rows(); ++i)
-	{
-		renderers.push_back(builder.buildBarRenderer(vs, size(vs), fs, size(fs)));
-		renderers[i]->set_offset(1.0f * i);
-		renderers[i]->send_gpu_data();
-	}
+	// std::vector<std::unique_ptr<ConcreteRenderer>> renderers;
+	// for (std::size_t i = 0; i < result.n_rows(); ++i)
+	// {
+	// 	renderers.push_back(builder.buildBarRenderer(vs, size(vs), fs, size(fs)));
+	// 	renderers[i]->set_offset(1.0f * i);
+	// 	renderers[i]->send_gpu_data();
+	// }
 
 	// Game loop - Main OpenGL rendering
 	glClearColor(0.5f, 0.5f, 1.0f, 1.0f);
@@ -336,9 +337,9 @@ int main(int argc, char** argv)
 
 		// Temporary code to make sure we can tran
 		std::unique_lock<std::mutex> buffer_lock{ buffer_mutex };
-		transform = fast_fft(buffer);
+		transform = wt::ft::fast_fft(buffer);
 		buffer_lock.unlock();
-		result = apply(applier, transform);
+		auto result = apply(applier, transform);
 		
 
 		// Render all

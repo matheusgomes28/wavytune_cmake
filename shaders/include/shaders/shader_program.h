@@ -25,7 +25,9 @@ struct ShaderProgram
 	GLuint address;
 };
 
-std::optional<ShaderProgram> create_shader_program(ShaderData const& vertex_shader,
+std::optional<ShaderProgram> create_shader_program(
+  ShaderData const& vertex_shader,
+  ShaderData const& geometry_shader,
   ShaderData const& fragment_shader);
 
 bool set_uniform(ShaderProgram const& program,

@@ -58,9 +58,8 @@ TEST(MatrixTests, fails_invalid_rows)
   EXPECT_THROW(matrix1[6], wt::MatrixException);
 
   wt::Matrix<double> matrix2{18, 20};
-  double test;
   EXPECT_THROW(matrix2[18], wt::MatrixException);
-  EXPECT_THROW(test = matrix2[19][0], wt::MatrixException);
+  EXPECT_THROW(matrix2[19][0], wt::MatrixException);
 }
 
 TEST(MatrixTests, creates_2_by_2_zero_int)

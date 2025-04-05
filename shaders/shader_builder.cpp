@@ -1,141 +1,87 @@
-#include "shaders/shader_builder.h"
+#include <shaders/shader.h>
+#include <shaders/shader_builder.h>
+#include <shaders/shader_program.h>
 
-ShaderBuilder::ShaderBuilder()
-	: shader_program_{std::make_unique<ShaderProgram>()}
-{
+#include <fstream>
+#include <iterator>
+#include <optional>
+#include <string>
+#include <unistd.h>
+
+namespace {
+
+std::optional<std::vector<char>> read_file_contents(std::string const &path) {
+
+  std::fstream file{path};
+  if (!file) {
+    return std::nullopt;
+  }
+
+  std::string const shader_str{std::istreambuf_iterator<char>{file},
+                               std::istreambuf_iterator<char>{}};
+
+  return std::make_optional<std::vector<char>>(begin(shader_str),
+                                               end(shader_str));
 }
 
-ShaderBuilder& ShaderBuilder::set_fragment_shader(const wt::ByteArray<500>& data)
-{
-	if (!shader_program_)
-	{
-		// TODO : shader_program_ is no longer 
-		// TODO : valid
+} // namespace
+
+ShaderBuilder::ShaderBuilder() {}
+
+ShaderBuilder::~ShaderBuilder() {}
+
+ShaderBuilder &ShaderBuilder::set_fragment_shader(std::string const &path) {
+
+  auto const maybe_data = read_file_contents(path);
+  if (!maybe_data) {
+    throw ShaderBuilderException();
+  }
+
+  fragment_shader_ = std::make_optional<ShaderData>(
+      ShaderType::FRAGMENT,
+      std::vector<char>{begin(*maybe_data), end(*maybe_data)});
+
+  return *this;
+}
+
+ShaderBuilder &ShaderBuilder::set_geometry_shader(std::string const &path) {
+  auto const maybe_data = read_file_contents(path);
+  if (!maybe_data) {
+    throw ShaderBuilderException();
+  }
+
+  geometry_shader_ = std::make_optional<ShaderData>(
+      ShaderType::GEOMETRY,
+      std::vector<char>{begin(*maybe_data), end(*maybe_data)});
+
+  return *this;
+}
+
+ShaderBuilder &ShaderBuilder::set_vertex_shader(std::string const &path) {
+
+  auto const maybe_data = read_file_contents(path);
+  if (!maybe_data) {
+    throw ShaderBuilderException();
+  }
+
+  vertex_shader_ = std::make_optional<ShaderData>(
+      ShaderType::VERTEX,
+      std::vector<char>{begin(*maybe_data), end(*maybe_data)});
+
+  return *this;
+}
+
+std::optional<ShaderProgram> ShaderBuilder::build() {
+
+	if (!vertex_shader_) {
+		throw ShaderBuilderException();
+	}
+	if (!fragment_shader_) {
+		throw ShaderBuilderException();
+	}
+	if (!geometry_shader_) {
 		throw ShaderBuilderException();
 	}
 
-	shader_program_->set_fragment_shader(
-		std::make_unique<FragmentShader>(data)
-	);
-	return *this;
-}
-
-ShaderBuilder& ShaderBuilder::set_fragment_shader(wt::ByteArray<500>&& data)
-{
-	if (!shader_program_)
-	{
-		// TODO : shader_program_ is no longer 
-		// TODO : valid
-		throw ShaderBuilderException();
-	}
-
-	shader_program_->set_fragment_shader(
-		std::make_unique<FragmentShader>(std::move(data))
-	);
-	return *this;
-}
-
-ShaderBuilder& ShaderBuilder::set_geometry_shader(const wt::ByteArray<500>& data)
-{
-	if (!shader_program_)
-	{
-		// TODO : shader_program_ is no longer
-		// TODO : valid
-		throw ShaderBuilderException();
-	}
-
-	shader_program_->set_geometry_shader(
-		std::make_unique<GeometryShader>(data)
-	);
-	return *this;
-}
-
-ShaderBuilder& ShaderBuilder::set_geometry_shader(wt::ByteArray<500>&& data)
-{
-	if (!shader_program_)
-	{
-		// TODO : shader_program_ is no longer
-		// TODO : valid
-		throw ShaderBuilderException();
-	}
-
-	shader_program_->set_geometry_shader(
-		std::make_unique<GeometryShader>(std::move(data))
-	);
-	return *this;
-}
-
-
-ShaderBuilder& ShaderBuilder::set_vertex_shader(const wt::ByteArray<500>& data)
-{
-	if (!shader_program_)
-	{
-		// TODO : shader_program_ is no longer
-		// TODO : valid
-		throw ShaderBuilderException();
-	}
-
-	shader_program_->set_vertex_shader(
-		std::make_unique<VertexShader>(data)
-	);
-	return *this;
-}
-
-ShaderBuilder& ShaderBuilder::set_vertex_shader(wt::ByteArray<500>&& data)
-{
-	if (!shader_program_)
-	{
-		// TODO : shader_program_ is no longer
-		// TODO : valid
-		throw ShaderBuilderException();
-	}
-
-	shader_program_->set_vertex_shader(
-		std::make_unique<VertexShader>(std::move(data))
-	);
-	return *this;
-}
-
-ShaderBuilder& ShaderBuilder::set_fragment_shader(std::unique_ptr<FragmentShader> fs)
-{
-	if (!shader_program_)
-	{
-		throw ShaderBuilderException();
-	}
-	
-	shader_program_->set_fragment_shader(std::move(fs));
-	return *this;
-}
-
-ShaderBuilder& ShaderBuilder::set_geometry_shader(std::unique_ptr<GeometryShader> gs)
-{
-	if (!shader_program_)
-	{
-		throw ShaderBuilderException();
-	}
-	
-	shader_program_->set_geometry_shader(std::move(gs));
-	return *this;
-}
-
-ShaderBuilder& ShaderBuilder::set_vertex_shader(std::unique_ptr<VertexShader> vs)
-{
-	if (!shader_program_)
-	{
-		throw ShaderBuilderException();
-	}
-	
-	shader_program_->set_vertex_shader(std::move(vs));
-	return *this;
-}
-
-
-std::unique_ptr<ShaderProgram> ShaderBuilder::build()
-{
-	if (!shader_program_)
-	{
-		throw ShaderBuilderException();
-	}
-
-	return std::move(shader_program_);
+	return create_shader_program(*vertex_shader_, *geometry_shader_, *fragment_shader_);
 }

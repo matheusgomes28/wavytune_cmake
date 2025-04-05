@@ -1,14 +1,9 @@
 #ifndef SHADERS_ABSRACT_SHADER_H
 #define SHADERS_ABSRACT_SHADER_H
 
-// Includes from the project
-#include "data_structures/bytes.h"
-
-// Includes from the STD
-#include <string>
-#include <stdexcept>
-
 #include <GL/glew.h>
+
+#include <vector>
 
 enum class ShaderType
 {

@@ -1,12 +1,11 @@
 #include <GL/glew.h>
 
-#include <data_structures/bytes.h>
 #include <graphics/window.h>
 #include <matrix/matrix.h>
 
 #include <iostream>
 
-void resize_callback(GLFWwindow *window, int width, int height)
+void resize_callback(GLFWwindow * /* window */, int width, int height)
 {
   glViewport(0, 0, width, height);
 }
@@ -33,7 +32,7 @@ int main()
   wt::Matrix<double> hello{2, 2};
   // ByteArray hello2(20);
 
-  wt::ByteArray<10> hello1{10, 10, 10, 10, 10, 10, 10, 10, 10, 10};
+  // wt::ByteArray<10> hello1{10, 10, 10, 10, 10, 10, 10, 10, 10, 10};
 
   std::cout << "Hello World!" << std::endl;
 

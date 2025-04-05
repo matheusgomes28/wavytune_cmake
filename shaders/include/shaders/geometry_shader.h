@@ -2,26 +2,22 @@
 #define SHADERS_GEOMETRY_SHADER_H
 
 // Includes from this project
-#include "abstract_shader.h"
+#include <shaders/abstract_shader.hpp>
 
 // Includes from third party libs
-#include <gl/glew.h>
+#include <GL/glew.h>
+
+#include <string>
 
 class GeometryShader : public AbstractShader
 {
 public:
-	GeometryShader(const wt::ByteArray<500>& b)
-		: AbstractShader(b)
+	GeometryShader(std::string const& path)
+		: AbstractShader(path)
 	{
 	}
 	
-	GeometryShader(wt::ByteArray<500>&& b)
-		: AbstractShader(std::forward<wt::ByteArray<500>>(b))
-	{
-	}
-
-private:
-	int _get_shader_type() const override
+	GLenum get_shader_type() const override
 	{
 		return GL_GEOMETRY_SHADER;
 	}

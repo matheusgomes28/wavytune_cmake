@@ -1,27 +1,22 @@
 #ifndef SHADERS_VERTEX_SHADER_H
 #define SHADERS_VERTEX_SHADER_H
 
-// Includes from this project
-#include "abstract_shader.h"
+#include <shaders/abstract_shader.hpp>
 
-// Includes from third party
 #include <GL/glew.h>
+
+#include <string>
 
 class VertexShader : public AbstractShader
 {
 public:
-	VertexShader(const wt::ByteArray<500>& b) 
-		: AbstractShader(b)
-	{
-	}
-
-	VertexShader(wt::ByteArray<500>&& b)
-		: AbstractShader(std::forward<wt::ByteArray<500>>(b))
+	VertexShader(std::string const& path)
+		: AbstractShader(path)
 	{
 	}
 
 private:
-	int _get_shader_type() const override
+	GLenum get_shader_type() const override
 	{
 		return GL_VERTEX_SHADER;
 	}

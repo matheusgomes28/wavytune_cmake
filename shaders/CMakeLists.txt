@@ -9,5 +9,4 @@ target_include_directories(shaders PUBLIC include)
 target_link_libraries(shaders
  PUBLIC
   GLEW::GLEW
-  glm::glm
-  data_structures)
+  glm::glm)

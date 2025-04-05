@@ -5,17 +5,15 @@ find_package(Microsoft.GSL REQUIRED)
 
 add_library(graphics
 	Camera.cpp
-	Shader.cpp
-	window.cpp
-	ShaderProgram.cpp)
+	window.cpp)
 
 target_include_directories(graphics PUBLIC include)
 
-target_link_libraries(graphics PUBLIC 
+target_link_libraries(graphics
+ PUBLIC 
   GLEW::GLEW
-	data_structures
-	glm::glm
-	glfw::glfw)
+  glm::glm
+  glfw)
 
 target_link_libraries(graphics PRIVATE
 	Microsoft.GSL::GSL)
