@@ -2,13 +2,10 @@
 #define FOURIER_DFT_H
 
 #include <complex>
-#include <queue> // for the windowing
 #include <vector>
 
-namespace wt
+namespace wt::ft
 {
-  namespace ft
-  {
     template <typename T> using Window = std::vector<std::complex<T>>;
 
     template <typename T> using Frequencies = std::vector<std::complex<T>>;
@@ -27,7 +24,6 @@ namespace wt
       virtual Frequencies<T> front_transform() = 0;
       virtual void feed(const Window<T> &window) = 0;
     };
-  } // namespace ft
-} // namespace wt
+} // namespace wt::ft
 
 #endif // FOURIER_DFT_H

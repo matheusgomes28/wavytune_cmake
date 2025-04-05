@@ -1,5 +1,8 @@
-#include <gtest/gtest.h>
 #include <matrix/matrix.h>
+
+#include <gtest/gtest.h>
+
+using namespace wt::matrix;
 
 template <typename T> bool eps_equal(const T &a, const T &b, const T &eps)
 {
@@ -13,35 +16,35 @@ template <typename T> bool eps_equal(const T &a, const T &b, const T &eps)
 
 TEST(MatrixTests, get_n_rows)
 {
-  wt::Matrix<int> matrix1{1, 2};
+  Matrix<int> matrix1{1, 2};
   EXPECT_EQ(matrix1.n_rows(), 1);
 
-  wt::Matrix<float> matrix2{2, 3};
+  Matrix<float> matrix2{2, 3};
   EXPECT_EQ(matrix2.n_rows(), 2);
 
-  wt::Matrix<std::complex<int>> matrix3{20, 2};
+  Matrix<std::complex<int>> matrix3{20, 2};
   EXPECT_EQ(matrix3.n_rows(), 20);
 }
 
 TEST(MatrixTests, get_n_cols)
 {
-  wt::Matrix<int> matrix1{2, 1};
+  Matrix<int> matrix1{2, 1};
   EXPECT_EQ(matrix1.n_cols(), 1);
 
-  wt::Matrix<float> matrix2{1, 10};
+  Matrix<float> matrix2{1, 10};
   EXPECT_EQ(matrix2.n_cols(), 10);
 
-  wt::Matrix<std::complex<float>> matrix3{1, 64};
+  Matrix<std::complex<float>> matrix3{1, 64};
   EXPECT_EQ(matrix3.n_cols(), 64);
 }
 
 TEST(MatrixTests, gets_valid_rows)
 {
-  wt::Matrix<std::complex<int>> matrix1{2, 2};
+  Matrix<std::complex<int>> matrix1{2, 2};
   EXPECT_NO_THROW(matrix1[0]);
   EXPECT_NO_THROW(matrix1[1]);
 
-  wt::Matrix<float> matrix2{7, 10};
+  Matrix<float> matrix2{7, 10};
   EXPECT_NO_THROW(matrix2[0]);
   EXPECT_NO_THROW(matrix2[1]);
   EXPECT_NO_THROW(matrix2[2]);
@@ -53,18 +56,18 @@ TEST(MatrixTests, gets_valid_rows)
 
 TEST(MatrixTests, fails_invalid_rows)
 {
-  wt::Matrix<float> matrix1{5, 1};
-  EXPECT_THROW(matrix1[5], wt::MatrixException);
-  EXPECT_THROW(matrix1[6], wt::MatrixException);
+  Matrix<float> matrix1{5, 1};
+  EXPECT_THROW(matrix1[5], MatrixException);
+  EXPECT_THROW(matrix1[6], MatrixException);
 
-  wt::Matrix<double> matrix2{18, 20};
-  EXPECT_THROW(matrix2[18], wt::MatrixException);
-  EXPECT_THROW(matrix2[19][0], wt::MatrixException);
+  Matrix<double> matrix2{18, 20};
+  EXPECT_THROW(matrix2[18], MatrixException);
+  EXPECT_THROW(matrix2[19][0], MatrixException);
 }
 
 TEST(MatrixTests, creates_2_by_2_zero_int)
 {
-  wt::Matrix<int> matrix{2, 2};
+  Matrix<int> matrix{2, 2};
   EXPECT_EQ(0, matrix[0][0]);
   EXPECT_EQ(0, matrix[0][1]);
   EXPECT_EQ(0, matrix[1][0]);
@@ -73,7 +76,7 @@ TEST(MatrixTests, creates_2_by_2_zero_int)
 
 TEST(MatrixTests, creates_3_by_3_zero_int)
 {
-  wt::Matrix<int> matrix{3, 3};
+  Matrix<int> matrix{3, 3};
   EXPECT_EQ(0, matrix[0][0]);
   EXPECT_EQ(0, matrix[0][1]);
   EXPECT_EQ(0, matrix[0][2]);
@@ -89,7 +92,7 @@ TEST(MatrixTests, creates_3_by_3_zero_int)
 
 TEST(MatrixTests, creates_2_by_2_zero_double)
 {
-  wt::Matrix<double> matrix{2, 2};
+  Matrix<double> matrix{2, 2};
   EXPECT_EQ(eps_equal(matrix[0][0], 0.0, 0.000001), true);
   EXPECT_EQ(eps_equal(matrix[0][1], 0.0, 0.000001), true);
   EXPECT_EQ(eps_equal(matrix[1][0], 0.0, 0.000001), true);
@@ -98,7 +101,7 @@ TEST(MatrixTests, creates_2_by_2_zero_double)
 
 TEST(MatrixTests, creates_3_by_3_zero_double)
 {
-  wt::Matrix<double> matrix{3, 3};
+  Matrix<double> matrix{3, 3};
   EXPECT_EQ(eps_equal(matrix[0][0], 0.0, 0.000001), true);
   EXPECT_EQ(eps_equal(matrix[0][1], 0.0, 0.000001), true);
   EXPECT_EQ(eps_equal(matrix[0][2], 0.0, 0.000001), true);
@@ -114,7 +117,7 @@ TEST(MatrixTests, creates_3_by_3_zero_double)
 
 TEST(MatrixTests, creates_2_by_2_list_int)
 {
-  wt::Matrix<int> matrix{2, 2};
+  Matrix<int> matrix{2, 2};
   matrix = {1, 2, 3, 4};
 
   EXPECT_EQ(matrix[0][0], 1);
@@ -125,7 +128,7 @@ TEST(MatrixTests, creates_2_by_2_list_int)
 
 TEST(MatrixTests, creates_3_by_5_list_int)
 {
-  wt::Matrix<int> matrix{3, 5};
+  Matrix<int> matrix{3, 5};
   matrix = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
 
   EXPECT_EQ(matrix[0][0], 1);
@@ -150,8 +153,8 @@ TEST(MatrixTests, creates_3_by_5_list_int)
 // Testing copy / move operators
 TEST(MatrixTests, assign_copies_2_by_2_int)
 {
-  wt::Matrix<int> *matrix1 = new wt::Matrix<int>(2, 2);
-  wt::Matrix<int> *matrix2 = new wt::Matrix<int>(2, 2);
+  Matrix<int> *matrix1 = new Matrix<int>(2, 2);
+  Matrix<int> *matrix2 = new Matrix<int>(2, 2);
   *matrix2 = {1, 2, 3, 4};
 
   EXPECT_NO_THROW(*matrix2 = *matrix1);
@@ -163,8 +166,8 @@ TEST(MatrixTests, assign_copies_2_by_2_int)
 
 TEST(MatrixTests, assign_deletes_2_by_2_double_copies)
 {
-  wt::Matrix<double> *matrix1 = new wt::Matrix<double>(2, 2);
-  wt::Matrix<double> *matrix2 = new wt::Matrix<double>(2, 2);
+  Matrix<double> *matrix1 = new Matrix<double>(2, 2);
+  Matrix<double> *matrix2 = new Matrix<double>(2, 2);
 
   EXPECT_NO_FATAL_FAILURE(*matrix2 = *matrix1);
   EXPECT_NO_FATAL_FAILURE(delete matrix2);
@@ -173,10 +176,10 @@ TEST(MatrixTests, assign_deletes_2_by_2_double_copies)
 
 TEST(MatrixTests, construct_copies_2_by_2_double_copies)
 {
-  wt::Matrix<double> *matrix1 = new wt::Matrix<double>(2, 2);
+  Matrix<double> *matrix1 = new Matrix<double>(2, 2);
   *matrix1 = {0.1, 0.02, 0.3, 0.0004};
 
-  wt::Matrix<double> matrix2{*matrix1};
+  Matrix<double> matrix2{*matrix1};
   EXPECT_EQ((*matrix1)[0][0], matrix2[0][0]);
   EXPECT_EQ((*matrix1)[0][1], matrix2[0][1]);
   EXPECT_EQ((*matrix1)[1][0], matrix2[1][0]);
@@ -185,18 +188,18 @@ TEST(MatrixTests, construct_copies_2_by_2_double_copies)
 
 TEST(MatrixTests, construct_deletes_2_by_2_double_copies)
 {
-  wt::Matrix<double> *matrix1 = new wt::Matrix<double>(2, 2);
-  wt::Matrix<double> matrix2{*matrix1};
+  Matrix<double> *matrix1 = new Matrix<double>(2, 2);
+  Matrix<double> matrix2{*matrix1};
 
   EXPECT_NO_FATAL_FAILURE(delete matrix1);
 }
 
 TEST(MatrixTests, assign_moves_3_by_3_float)
 {
-  wt::Matrix<float> *matrix1 = new wt::Matrix<float>(3, 3);
+  Matrix<float> *matrix1 = new Matrix<float>(3, 3);
   *matrix1 = {0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f};
 
-  wt::Matrix<float> matrix2 = std::move(*matrix1);
+  Matrix<float> matrix2 = std::move(*matrix1);
   EXPECT_EQ(matrix2[0][0], 0.1f);
   EXPECT_EQ(matrix2[0][1], 0.2f);
   EXPECT_EQ(matrix2[0][2], 0.3f);
@@ -212,11 +215,11 @@ TEST(MatrixTests, assign_moves_3_by_3_float)
 
 TEST(MatrixTests, construct_moves_3_by_5_float)
 {
-  wt::Matrix<float> *matrix1 = new wt::Matrix<float>(3, 5);
+  Matrix<float> *matrix1 = new Matrix<float>(3, 5);
   *matrix1 = {0.1f, 0.2f,  0.3f,  0.4f,  0.5f,  0.6f,  0.7f, 0.8f,
               0.9f, 0.10f, 0.11f, 0.12f, 0.13f, 0.14f, 0.15f};
 
-  wt::Matrix<float> *matrix2 = new wt::Matrix<float>{std::move(*matrix1)};
+  Matrix<float> *matrix2 = new Matrix<float>{std::move(*matrix1)};
   EXPECT_EQ((*matrix2)[0][0], 0.1f);
   EXPECT_EQ((*matrix2)[0][1], 0.2f);
   EXPECT_EQ((*matrix2)[0][2], 0.3f);
@@ -238,24 +241,24 @@ TEST(MatrixTests, construct_moves_3_by_5_float)
 
 TEST(MatrixTests, construct_deletes_3_by_5_moved)
 {
-  wt::Matrix<float> *matrix1 = new wt::Matrix<float>(3, 5);
+  Matrix<float> *matrix1 = new Matrix<float>(3, 5);
   *matrix1 = {0.1f, 0.2f,  0.3f,  0.4f,  0.5f,  0.6f,  0.7f, 0.8f,
               0.9f, 0.10f, 0.11f, 0.12f, 0.13f, 0.14f, 0.15f};
 
-  wt::Matrix<float> *matrix2 = new wt::Matrix<float>{std::move(*matrix1)};
+  Matrix<float> *matrix2 = new Matrix<float>{std::move(*matrix1)};
   EXPECT_NO_FATAL_FAILURE(delete matrix2);
   EXPECT_NO_FATAL_FAILURE(delete matrix1);
 }
 
 TEST(MatrixTests, multiples_by_scalar)
 {
-  wt::Matrix<int> matrix1{5, 5};
+  Matrix<int> matrix1{5, 5};
   matrix1 = {
       1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13,
       14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
   };
-  wt::Matrix<int> result11 = matrix1 * 7;
-  wt::Matrix<int> result12 = 7 * matrix1;
+  Matrix<int> result11 = matrix1 * 7;
+  Matrix<int> result12 = 7 * matrix1;
 
   for (std::size_t row = 0; row < matrix1.n_rows(); ++row)
   {
@@ -269,13 +272,13 @@ TEST(MatrixTests, multiples_by_scalar)
 
 TEST(MatrixTests, multiplies_2_by_2_id_double)
 {
-  wt::Matrix<double> matrix1{2, 2};
+  Matrix<double> matrix1{2, 2};
   matrix1 = {1.0, 0.0, 0.0, 1.0};
 
-  wt::Matrix<double> matrix2{2, 2};
+  Matrix<double> matrix2{2, 2};
   matrix2 = {2.13, 3.13, 5.17, 10.1};
 
-  wt::Matrix<double> result = matrix1 * matrix2;
+  Matrix<double> result = matrix1 * matrix2;
 
   EXPECT_TRUE(eps_equal(result[0][0], matrix2[0][0], 0.00001));
   EXPECT_TRUE(eps_equal(result[0][1], matrix2[0][1], 0.00001));
@@ -285,13 +288,13 @@ TEST(MatrixTests, multiplies_2_by_2_id_double)
 
 TEST(MatrixTests, multiplies_3_by_3_id_double)
 {
-  wt::Matrix<double> matrix1{3, 3};
+  Matrix<double> matrix1{3, 3};
   matrix1 = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
 
-  wt::Matrix<double> matrix2{3, 3};
+  Matrix<double> matrix2{3, 3};
   matrix2 = {2.13, 3.13, 4.12, 5.17, 10.1, 5.2933, 1.11, 12.30, 2.3002};
 
-  wt::Matrix<double> result = matrix1 * matrix2;
+  Matrix<double> result = matrix1 * matrix2;
 
   EXPECT_TRUE(eps_equal(result[0][0], matrix2[0][0], 0.00001));
   EXPECT_TRUE(eps_equal(result[0][1], matrix2[0][1], 0.00001));
@@ -306,11 +309,11 @@ TEST(MatrixTests, multiplies_3_by_3_id_double)
 
 TEST(MatrixTests, multiplies_2_by_2_vector)
 {
-  wt::Matrix<double> matrix{2, 2};
+  Matrix<double> matrix{2, 2};
   matrix = {1.0, 0.0, 0.0, 1.0};
 
   std::vector<double> column{2.1234, 3.6789};
-  wt::Matrix<double> result = matrix * column;
+  Matrix<double> result = matrix * column;
 
   EXPECT_TRUE(eps_equal(result[0][0], column[0], 0.00001));
   EXPECT_TRUE(eps_equal(result[1][0], column[1], 0.00001));
@@ -318,12 +321,12 @@ TEST(MatrixTests, multiplies_2_by_2_vector)
 
 TEST(MatrixTests, adds_4_by_5)
 {
-  wt::Matrix<double> A{4, 5};
+  Matrix<double> A{4, 5};
   A = {1.1,   2.2,   3.3,   4.4,   5.5,   6.6,   7.7,   8.8,   9.9,   10.10,
        11.11, 12.12, 13.13, 14.14, 15.15, 16.16, 17.17, 18.18, 19.19, 20.20};
-  wt::Matrix<double> B = A;
+  Matrix<double> B = A;
 
-  wt::Matrix<double> C = A + B;
+  Matrix<double> C = A + B;
   EXPECT_TRUE(eps_equal(C[0][0], 2 * A[0][0], 0.00001));
   EXPECT_TRUE(eps_equal(C[0][1], 2 * A[0][1], 0.00001));
   EXPECT_TRUE(eps_equal(C[0][2], 2 * A[0][2], 0.00001));
@@ -351,11 +354,11 @@ TEST(MatrixTests, adds_4_by_5)
 
 TEST(MatrixTests, subtracts_3_by_4)
 {
-  wt::Matrix<int> matrix1{3, 4};
+  Matrix<int> matrix1{3, 4};
   matrix1 = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
 
-  wt::Matrix<int> matrix2 = matrix1;
-  wt::Matrix<int> result = matrix1 - matrix2;
+  Matrix<int> matrix2 = matrix1;
+  Matrix<int> result = matrix1 - matrix2;
 
   EXPECT_EQ(result[0][0], 0);
   EXPECT_EQ(result[0][1], 0);

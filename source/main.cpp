@@ -29,7 +29,7 @@ int main()
   glfwMakeContextCurrent(window);
 
   // VAO vao{"vao testing"};
-  wt::Matrix<double> hello{2, 2};
+  wt::matrix::Matrix<double> hello{2, 2};
   // ByteArray hello2(20);
 
   // wt::ByteArray<10> hello1{10, 10, 10, 10, 10, 10, 10, 10, 10, 10};

@@ -2,7 +2,7 @@
 #define FOURIER_MATRIX_TRAITS_H
 #include <complex>
 
-namespace wt
+namespace wt::matrix
 {
   template <typename T> class MatrixTraits
   {

@@ -1,5 +1,6 @@
-add_library(fourier src/dft_operations.cpp
-					src/fourier.cpp)
+add_library(fourier)
+
+target_sources(fourier PRIVATE src/dft_operations.cpp src/fourier.cpp)
 
 target_include_directories(fourier PUBLIC include)
 

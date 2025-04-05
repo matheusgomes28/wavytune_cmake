@@ -1,13 +1,17 @@
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#include "shaders/shader_program.h"
+#include <fourier/dft_operations.h>
+#include <shaders/shader_program.h>
 
 // More testing for why things arent working
 #define GLM_ENABLE_EXPERIMENTAL
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 
-#include <fourier/dft_operations.h>
+#define MINIAUDIO_IMPLEMENTATION 
+extern "C" {
+	#include <miniaudio.h>
+}
 
 // #include "GLAbstractions/vao.h"
 // #include "GLAbstractions/vbo.h"
@@ -15,8 +19,10 @@
 
 #include <chrono>
 #include <cmath>
+#include <complex>
 #include <iostream>
-#include <mutex>
+// #include <mutex>
+// #include <thread>
 
 // #include "graphics/draw_buffer.h"
 // #include "graphics/draw_data2.h"
@@ -32,68 +38,31 @@
 
 // #include "DataStructures/byte_array.h"
 
-#include <thread>
-#include <complex>
-
-extern "C"
-{
-#include "portaudio.h"
-
-typedef struct
-{
-	float left_phase;
-	float right_phase;
-} paTestData;
-
-static int patestCallback(const void* input_buffer, void* output_buffer,
-						  unsigned long frames_per_buffer,
-	                      const PaStreamCallbackTimeInfo* time_info,
-						  PaStreamCallbackFlags status_flag, 
-	                      void* user_data);
-}
-
-static paTestData data = {-1.0f, -1.0f};
-
-static std::mutex buffer_mutex;
-static std::vector<std::complex<double>> buffer;
-
-static int patestCallback(const void* input_buffer, void* output_buffer,
-	unsigned long frames_per_buffer,
-	const PaStreamCallbackTimeInfo* /* time_info */,
-	PaStreamCallbackFlags /* status_flag */,
-	void* user_data)
-{
-	/* Cast data passed through stream to our structure. */
-	paTestData* data = (paTestData*)user_data;
-	float* out = (float*)output_buffer;
-	unsigned int i;
-	(void)input_buffer; /* Prevent unused variable warning. */
-
-	/* Buffer for the transform */
-	std::vector<std::complex<double>> buffer_vals;
-	buffer_vals.reserve(frames_per_buffer);
-
-	float diff = 0.02f;
-	for (i = 0; i < frames_per_buffer; i++)
+namespace {
+	void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
 	{
-		*out++ = data->left_phase;  /* left */
-		*out++ = data->right_phase;  /* right */
-		/* Generate simple sawtooth phaser that ranges between -1.0 and 1.0. */
-		data->left_phase += diff;
-		/* When signal reaches top, drop back down. */
-		/* higher pitch so we can distinguish left and right. */
-		data->right_phase += diff;
-		if (data->right_phase >= 1.0f) diff = - diff;
-		
-		buffer_vals.push_back(data->left_phase);
+		ma_decoder* pDecoder = (ma_decoder*)pDevice->pUserData;
+		if (pDecoder == NULL) {
+			return;
+		}
+
+		ma_uint64 frames_read = 0;
+		ma_decoder_read_pcm_frames(pDecoder, pOutput, frameCount, &frames_read);
+
+		auto* samples = reinterpret_cast<float*>(pOutput);
+		ma_uint32 channel_count = pDevice->playback.channels;
+
+		std::vector<float> data;
+		for (ma_uint64 i = 0; i < frames_read * channel_count; ++i) {
+			data.push_back(samples[i]);
+		}
+
+		auto const test = data.size();
+
+		(void)test;
+		(void)pInput;
 	}
-
-	std::lock_guard<std::mutex> buffer_lock{ buffer_mutex };
-	buffer = buffer_vals;
-	return 0;
-}
-
-
+} // namespace
 
 template<class T, size_t N>
 constexpr size_t size(T(&)[N])
@@ -223,31 +192,53 @@ unsigned vertexBufferId = 0;
 unsigned normalBufferId = 0;
 
 //int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
-int main()
+int main(int argc, char** argv)
 {
+	// MARK: Begin of audio
+	ma_result result;
+    ma_decoder decoder;
+    ma_device_config deviceConfig;
+    ma_device device;
+
+	if (argc < 2) {
+        printf("No input file.\n");
+        return -1;
+    }
+
+    result = ma_decoder_init_file(argv[1], NULL, &decoder);
+    if (result != MA_SUCCESS) {
+        printf("Could not load file: %s\n", argv[1]);
+        return -2;
+    }
+
+    deviceConfig = ma_device_config_init(ma_device_type_playback);
+    deviceConfig.playback.format   = decoder.outputFormat;
+    deviceConfig.playback.channels = decoder.outputChannels;
+    deviceConfig.sampleRate        = decoder.outputSampleRate;
+    deviceConfig.dataCallback      = data_callback;
+    deviceConfig.pUserData         = &decoder;
+
+    if (ma_device_init(NULL, &deviceConfig, &device) != MA_SUCCESS) {
+        printf("Failed to open playback device.\n");
+        ma_decoder_uninit(&decoder);
+        return -3;
+    }
+
+    if (ma_device_start(&device) != MA_SUCCESS) {
+        printf("Failed to start playback device.\n");
+        ma_device_uninit(&device);
+        ma_decoder_uninit(&decoder);
+        return -4;
+    }
+
+	// MARK: End of audio
+
 	using namespace std::chrono_literals;
-	std::chrono::high_resolution_clock c;
-
-	auto error = Pa_Initialize();
-	if (error != paNoError)
-	{
-		std::cout << "Audio error" << std::endl;
-	}
-
-	PaStream* stream;
-	auto err = Pa_OpenDefaultStream(&stream,
-		0,
-		2,
-		paFloat32,
-		44100,
-		256,
-		patestCallback,
-		&data);
-	Pa_StartStream(stream);
+	// std::chrono::high_resolution_clock c;
 
 	// Getting a signal from sin, with frequency 16Hz
 	const double f = 0.25;
-	const double A = 1;
+	// const double A = 1;
 	const double N = 64;
 	const double T = 1;
 	const double phi = 0;
@@ -291,12 +282,12 @@ int main()
 	// Create the shader program
 	glewInit(); // Initialise all the openGL macros
 
-	glm::mat4 proj = glm::perspective<float>(
-		glm::radians(45.0f),
-		800 / 600,
-		0.01,
-		100
-		);
+	// glm::mat4 proj = glm::perspective<float>(
+	// 	glm::radians(45.0f),
+	// 	800 / 600,
+	// 	0.01,
+	// 	100
+	// 	);
 
 
 	// Callback from commands
@@ -324,7 +315,7 @@ int main()
 	// }
 
 	// Game loop - Main OpenGL rendering
-	glClearColor(0.5f, 0.5f, 1.0f, 1.0f);
+	glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
 	while (!glfwWindowShouldClose(window)) {
 		lookAt = glm::lookAt(
 			cam.pos,
@@ -336,18 +327,18 @@ int main()
 
 
 		// Temporary code to make sure we can tran
-		std::unique_lock<std::mutex> buffer_lock{ buffer_mutex };
-		transform = wt::ft::fast_fft(buffer);
-		buffer_lock.unlock();
-		auto result = apply(applier, transform);
+		// std::unique_lock<std::mutex> buffer_lock{ buffer_mutex };
+		// transform = wt::ft::fast_fft(buffer);
+		// buffer_lock.unlock();
+		auto result = wt::matrix::apply(applier, transform);
 		
 
 		// Render all
-		for (std::size_t i = 0; i < renderers.size(); ++i)
-		{
-			renderers[i]->set_height(result[i][0]);
-			renderers[i]->render(proj, lookAt);
-		}
+		// for (std::size_t i = 0; i < renderers.size(); ++i)
+		// {
+		// 	renderers[i]->set_height(result[i][0]);
+		// 	renderers[i]->render(proj, lookAt);
+		// }
 
 		glBindVertexArray(0);
 		glfwSwapBuffers(window);
@@ -355,11 +346,7 @@ int main()
 	}
 
 
-	// Uninit the audio engine
-	error = Pa_Terminate();
-	if (error != paNoError)
-	{
-		std::cout << "ERROR" << std::endl;
-	}
+    ma_device_uninit(&device);
+    ma_decoder_uninit(&decoder);
 	return 0;
 }

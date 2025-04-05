@@ -3,7 +3,7 @@
 
 #include <stdexcept>
 
-namespace wt
+namespace wt::matrix
 {
   class MatrixException : public std::runtime_error
   {

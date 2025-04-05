@@ -6,7 +6,7 @@
 #include <cstdlib>
 #include <type_traits>
 
-namespace wt
+namespace wt::matrix
 {
   template <typename T, typename _Matrix_Traits> class Matrix_T;
 
@@ -91,6 +91,6 @@ namespace wt
     friend class Matrix_T<T_non_cost, _Matrix_Traits>;
   };
 
-} // namespace wt
+} // namespace wt::matrix
 
 #endif // FOURIER_MATRIX_ROW_H
