@@ -5,7 +5,9 @@ find_package(Microsoft.GSL REQUIRED)
 
 add_library(graphics
 	Camera.cpp
-	window.cpp)
+	window.cpp
+  concrete_renderer.cpp
+  draw_buffer.cpp)
 
 target_include_directories(graphics PUBLIC include)
 

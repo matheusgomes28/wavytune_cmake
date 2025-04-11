@@ -13,8 +13,6 @@ if (WIN32)
     set(MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
-include(external/PortAudio.cmake)
-
 add_subdirectory(fourier)
 add_subdirectory(graphics)
 add_subdirectory(matrix)

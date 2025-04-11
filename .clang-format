@@ -18,8 +18,8 @@
 BasedOnStyle:  LLVM
 # AccessModifierOffset: -2
 AccessModifierOffset: -4
-# AlignAfterOpenBracket: Align
 AlignAfterOpenBracket: DontAlign
+BracedInitializerIndentWidth: 1
 # AlignArrayOfStructures: None
 # AlignConsecutiveAssignments:
 #   Enabled:         false
@@ -150,7 +150,7 @@ ColumnLimit:     120
 # CommentPragmas:  '^ IWYU pragma:'
 # CompactNamespaces: false
 # ConstructorInitializerIndentWidth: 4
-# ContinuationIndentWidth: 4
+ContinuationIndentWidth: 4
 # Cpp11BracedListStyle: true
 # DerivePointerAlignment: false
 # DisableFormat:   false
@@ -348,4 +348,3 @@ StatementMacros:
 #   - NS_SWIFT_NAME
 #   - PP_STRINGIZE
 #   - STRINGIZE
-...

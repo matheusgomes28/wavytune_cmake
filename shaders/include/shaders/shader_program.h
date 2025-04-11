@@ -27,6 +27,10 @@ struct ShaderProgram
 
 std::optional<ShaderProgram> create_shader_program(
   ShaderData const& vertex_shader,
+  ShaderData const& fragment_shader);
+
+std::optional<ShaderProgram> create_shader_program(
+  ShaderData const& vertex_shader,
   ShaderData const& geometry_shader,
   ShaderData const& fragment_shader);
 
