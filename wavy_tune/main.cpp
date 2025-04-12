@@ -323,12 +323,12 @@ int main(int argc, char** argv) {
 
     
     // MARK: Projection maths
-    glm::mat4 proj = glm::perspective<float>(
-    	glm::radians(45.0f),
-    	800 / 600,
-    	0.01,
-    	100
-    );
+    // glm::mat4 proj = glm::perspective<float>(
+    // 	glm::radians(45.0f),
+    // 	800 / 600,
+    // 	0.01,
+    // 	100
+    // );
     // MARK: End projection maths
 
     // Callback from commands

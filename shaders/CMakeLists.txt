@@ -10,3 +10,5 @@ target_link_libraries(shaders
  PUBLIC
   GLEW::GLEW
   glm::glm)
+
+add_library(wavytune::shaders ALIAS shaders)

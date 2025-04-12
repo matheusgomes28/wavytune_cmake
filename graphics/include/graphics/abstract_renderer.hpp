@@ -20,7 +20,7 @@ public:
 
 	virtual void render(const glm::mat4& proj, const glm::mat4& view) = 0;
 	virtual void send_gpu_data() = 0;
-	virtual void add_data(DrawBufferPtr data) = 0;
+	virtual void queue_data(DrawBufferPtr&& data) = 0;
 	virtual void set_shader(unsigned int shader_address) = 0;
 
 };

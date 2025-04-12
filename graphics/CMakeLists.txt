@@ -14,8 +14,9 @@ target_include_directories(graphics PUBLIC include)
 target_link_libraries(graphics
  PUBLIC 
   GLEW::GLEW
+  glfw
   glm::glm
-  glfw)
+  wavytune::shaders)
 
 target_link_libraries(graphics PRIVATE
 	Microsoft.GSL::GSL)

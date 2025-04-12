@@ -13,23 +13,23 @@ DrawBuffer::~DrawBuffer() {
     // will be deleted
 }
 
-const std::vector<glm::vec3>& DrawBuffer::get_vertices() const {
+std::vector<glm::vec3>& DrawBuffer::get_vertices() {
     return vertices_;
 }
 
-const std::vector<glm::vec3>& DrawBuffer::get_normals() const {
+std::vector<glm::vec3>& DrawBuffer::get_normals() {
     return normals_;
 }
 
-const std::vector<glm::vec2>& DrawBuffer::get_texels() const {
+std::vector<glm::vec2>& DrawBuffer::get_texels() {
     return texels_;
 }
 
-const std::vector<std::uint32_t>& DrawBuffer::get_indices() const {
+std::vector<std::uint32_t>& DrawBuffer::get_indices() {
     return indices_;
 }
 
-const std::vector<glm::vec4>& DrawBuffer::get_colours() const {
+std::vector<glm::vec4>& DrawBuffer::get_colours() {
     return colours_;
 }
 

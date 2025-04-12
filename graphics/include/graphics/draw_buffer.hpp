@@ -14,11 +14,11 @@ public:
     virtual ~DrawBuffer();
 
 
-    const std::vector<glm::vec3>& get_vertices() const;
-    const std::vector<glm::vec3>& get_normals() const;
-    const std::vector<glm::vec2>& get_texels() const;
-    const std::vector<glm::vec4>& get_colours() const;
-    const std::vector<std::uint32_t>& get_indices() const;
+    std::vector<glm::vec3>& get_vertices();
+    std::vector<glm::vec3>& get_normals();
+    std::vector<glm::vec2>& get_texels();
+    std::vector<glm::vec4>& get_colours();
+    std::vector<std::uint32_t>& get_indices();
 
     void set_vertices(std::vector<glm::vec3> const& vertices);
     void set_normals(std::vector<glm::vec3> const& normals);
