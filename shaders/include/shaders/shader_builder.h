@@ -6,6 +6,7 @@
 #include <shaders/shader.h>
 
 // Includes from the std
+#include <memory>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -31,7 +32,7 @@ public:
 	ShaderBuilder& set_fragment_shader(std::string const& path);
 	ShaderBuilder& set_geometry_shader(std::string const& path);
 
-	std::optional<ShaderProgram> build();
+	std::unique_ptr<ShaderProgram> build();
 
 private:
 	std::optional<ShaderData> vertex_shader_;

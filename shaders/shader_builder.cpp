@@ -68,7 +68,7 @@ ShaderBuilder& ShaderBuilder::set_vertex_shader(std::string const& path) {
     return *this;
 }
 
-std::optional<ShaderProgram> ShaderBuilder::build() {
+std::unique_ptr<ShaderProgram> ShaderBuilder::build() {
 
     if (!vertex_shader_) {
         throw ShaderBuilderException();

@@ -2,6 +2,10 @@
 #include <shaders/shader_builder.h>
 #include <shaders/shader_program.h>
 
+#include "graphics/concrete_renderer.hpp"
+#include <graphics/concrete_renderer.hpp>
+#include <graphics/draw_buffer.hpp>
+
 // More testing for why things arent working
 #define GLM_ENABLE_EXPERIMENTAL
 #include <GL/glew.h>
@@ -307,28 +311,84 @@ int main(int argc, char** argv) {
     // Create the shader program
     glewInit(); // Initialise all the openGL macros
 
-    // MARK: Creating shader objects
+    // MARK: Creating shader & renderers
     ShaderBuilder shader_builder;
 
-    auto const shader_program = shader_builder.set_vertex_shader(args->vs_path)
-                                    .set_geometry_shader(args->gs_path)
-                                    .set_fragment_shader(args->fs_path)
-                                    .build();
+    auto shader_program = shader_builder.set_vertex_shader(args->vs_path)
+                              .set_geometry_shader(args->gs_path)
+                              .set_fragment_shader(args->fs_path)
+                              .build();
 
     if (!shader_program) {
         std::cout << "could not build the shader program\n";
         return -1;
     }
+
+    ConcreteRenderer renderer{std::move(shader_program)};
+
+    std::vector<glm::vec3> vertices{
+     // Front face
+     {-0.5f, -0.5f, 0.5f}, // Bottom-left
+     {0.5f, -0.5f, 0.5f}, // Bottom-right
+     {0.5f, 0.5f, 0.5f}, // Top-right
+     {-0.5f, 0.5f, 0.5f}, // Top-left
+
+     // Back face
+     {-0.5f, -0.5f, -0.5f}, // Bottom-left
+     {0.5f, -0.5f, -0.5f}, // Bottom-right
+     {0.5f, 0.5f, -0.5f}, // Top-right
+     {-0.5f, 0.5f, -0.5f} // Top-left
+    };
+
+    std::vector<glm::vec3> normals{
+        // Front face
+        {0.0f,  0.0f,  1.0f},
+        {0.0f,  0.0f,  1.0f},
+        {0.0f,  0.0f,  1.0f},
+        {0.0f,  0.0f,  1.0f},
+        
+        // Back face (all normals point in -z direction)
+        {0.0f,  0.0f, -1.0f},
+        {0.0f,  0.0f, -1.0f},
+        {0.0f,  0.0f, -1.0f},
+        {0.0f,  0.0f, -1.0f}
+    };
+
+    std::vector<glm::vec4> colors{
+        // Front face
+        {1.0f, 0.0f, 0.0f, 1.0f},
+        {1.0f, 0.0f, 0.0f, 1.0f},
+        {1.0f, 0.0f, 0.0f, 1.0f},
+        {1.0f, 0.0f, 0.0f, 1.0f},
+        
+        // Back face
+        {1.0f, 0.0f, 0.0f, 1.0f},
+        {1.0f, 0.0f, 0.0f, 1.0f},
+        {1.0f, 0.0f, 0.0f, 1.0f},
+        {1.0f, 0.0f, 0.0f, 1.0f}
+    };
+    
+    DrawBufferBuilder buffer_builder;
+    DrawBuffer buffer = buffer_builder
+        .add_vertices(std::move(vertices))
+        .add_normals(std::move(normals))
+        .add_colors(std::move(colors))
+        .build();
+    renderer.queue_data(std::move(buffer));
+
+    renderer.send_gpu_data();
+
+
     // MARK: End shader objects
 
-    
+
     // MARK: Projection maths
-    // glm::mat4 proj = glm::perspective<float>(
-    // 	glm::radians(45.0f),
-    // 	800 / 600,
-    // 	0.01,
-    // 	100
-    // );
+    glm::mat4 proj = glm::perspective<float>(
+    	glm::radians(45.0f),
+    	800 / 600.0,
+    	0.01,
+    	100
+    );
     // MARK: End projection maths
 
     // Callback from commands
@@ -346,6 +406,7 @@ int main(int argc, char** argv) {
 
     // Create a bar renderer
 
+
     // RenderBuilder builder;
     // std::vector<std::unique_ptr<ConcreteRenderer>> renderers;
     // for (std::size_t i = 0; i < result.n_rows(); ++i)
@@ -358,7 +419,8 @@ int main(int argc, char** argv) {
     // Game loop - Main OpenGL rendering
     glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
     while (!glfwWindowShouldClose(window)) {
-        lookAt = glm::lookAt(cam.pos, cam.pos + cam.getDirection(), cam.getUp());
+        // lookAt = glm::lookAt(cam.pos, cam.pos + cam.getDirection(), cam.getUp());
+        lookAt = glm::lookAt(cam.pos, {0, 0, 0}, cam.getUp());
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -374,6 +436,7 @@ int main(int argc, char** argv) {
         // 	renderers[i]->set_height(result[i][0]);
         // 	renderers[i]->render(proj, lookAt);
         // }
+        renderer.render(proj, lookAt);
 
         glBindVertexArray(0);
         glfwSwapBuffers(window);

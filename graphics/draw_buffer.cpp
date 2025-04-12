@@ -30,27 +30,43 @@ std::vector<std::uint32_t>& DrawBuffer::get_indices() {
 }
 
 std::vector<glm::vec4>& DrawBuffer::get_colours() {
-    return colours_;
+    return colors_;
 }
 
 void DrawBuffer::set_vertices(std::vector<glm::vec3> const& vertices) {
+    vertices_ = vertices;
+}
+
+void DrawBuffer::set_vertices(std::vector<glm::vec3>&& vertices) {
     vertices_ = std::move(vertices);
 }
 
 void DrawBuffer::set_normals(std::vector<glm::vec3> const& normals) {
+    normals_ = normals;
+}
+
+void DrawBuffer::set_normals(std::vector<glm::vec3>&& normals) {
     normals_ = std::move(normals);
 }
 
 void DrawBuffer::set_texels(std::vector<glm::vec2> const& texels) {
+    texels_ = texels;
+}
+
+void DrawBuffer::set_texels(std::vector<glm::vec2>&& texels) {
     texels_ = std::move(texels);
 }
 
 void DrawBuffer::set_indices(std::vector<std::uint32_t> const& indices) {
-    indices_ = std::move(indices);
+    indices_ = indices;
 }
 
-void DrawBuffer::set_colours(std::vector<glm::vec4> const& colours) {
-    colours_ = std::move(colours);
+void DrawBuffer::set_colors(std::vector<glm::vec4> const& colors) {
+    colors_ = colors;
+}
+
+void DrawBuffer::set_colors(std::vector<glm::vec4>&& colors) {
+    colors_ = std::move(colors);
 }
 
 std::string DrawBuffer::get_description() const {

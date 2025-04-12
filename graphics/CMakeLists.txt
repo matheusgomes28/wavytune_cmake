@@ -20,3 +20,5 @@ target_link_libraries(graphics
 
 target_link_libraries(graphics PRIVATE
 	Microsoft.GSL::GSL)
+
+add_library(wavytune::graphics ALIAS graphics)

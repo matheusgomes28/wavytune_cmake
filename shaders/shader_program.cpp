@@ -4,20 +4,16 @@
 #include "shaders/shader.h"
 
 // Includes from the STD
-#include <exception>
-#include <iostream>
+#include <memory>
 #include <optional>
 
 // Includes from third party
 #include <GL/glew.h>
+#include <gsl/assert>
 
 #include <glm/gtc/type_ptr.hpp>
 
 namespace {
-    GLuint generate_address() {
-        return glCreateProgram();
-    }
-
     std::optional<CompiledShader> compile_shader(ShaderData const& shader) {
         auto const shader_type = [&shader]() {
             switch (shader.type) {
@@ -50,105 +46,85 @@ namespace {
         return std::make_optional<CompiledShader>(address);
     }
 
-    bool attach_shaders(ShaderProgram const& shader_program) {
-        auto const& address = shader_program.address;
-        if (address > 0) {
-            // TODO : check for attach shader errors
-            //        read docs for possible GL errors
-            glAttachShader(address, shader_program.vertex_shader.address);
-            if (shader_program.geometry_shader.address > 0) {
-                glAttachShader(address, shader_program.geometry_shader.address);
-            }
-            glAttachShader(address, shader_program.geometry_shader.address);
-            return true;
-        }
+    bool attach_shaders(std::uint32_t program_address, std::uint32_t vertex_address, std::uint32_t geometry_address,
+        std::uint32_t fragment_address) {
+        Expects(program_address > 0);
 
-        return false;
+        // TODO : check for attach shader errors
+        //        read docs for possible GL errors
+        glAttachShader(program_address, vertex_address);
+        if (geometry_address > 0) {
+            glAttachShader(program_address, geometry_address);
+        }
+        glAttachShader(program_address, fragment_address);
+
+        return true;
     }
 
-    bool link_shaders(ShaderProgram const& shader_program) {
-        if (shader_program.address > 0) {
-            // Need to attach all the addresses
-            // TODO : find possible OpenGLerrors for linking
-            //        the shaders here
-            glLinkProgram(shader_program.address);
-            return true;
-        }
+    bool link_shaders(std::uint32_t program_address) {
+        Expects(program_address > 0);
 
-        return false;
+        // TODO : Need to find a nice way to get errors
+        glLinkProgram(program_address);
+        return true;
     }
 
-    bool detach_shaders(ShaderProgram const& shader_program) {
-        // TODO : do I need to check all of these
-        //        shader addresses???
-        const auto address = shader_program.address;
-        if (address > 0) {
-            glDetachShader(address, shader_program.vertex_shader.address);
-            if (shader_program.geometry_shader.address > 0) {
-                glDetachShader(address, shader_program.geometry_shader.address);
-            }
-            glDetachShader(address, shader_program.fragment_shader.address);
-            return true;
+    bool detach_shaders(std::uint32_t program_address, std::uint32_t vertex_address, std::uint32_t geometry_address, std::uint32_t fragment_address) {
+        Expects(program_address > 0);
+        glDetachShader(program_address, vertex_address);
+        if (geometry_address > 0) {
+            glDetachShader(program_address, geometry_address);
+        }
+        glDetachShader(program_address, fragment_address);
+        return true;
+    }
+
+    // ShaderProgram needs the shaders to be compiled
+    // at the moment!
+    bool compile_and_link(std::uint32_t program_address, std::uint32_t vertex_address, std::uint32_t geometry_address,
+        std::uint32_t fragment_address) {
+
+        if (vertex_address <= 0) // are opengl addresses always > 0??
+        {
+            return false;
         }
 
-        return false;
+        if (fragment_address <= 0) {
+            return false;
+        }
+
+        // TODO : print some stupid error messages on failures
+        if (!attach_shaders(program_address, vertex_address, geometry_address, fragment_address)) {
+            return false;
+        }
+
+        if (!link_shaders(program_address)) {
+            return false;
+        }
+
+        if (!detach_shaders(program_address, vertex_address, geometry_address, fragment_address)) {
+            return false;
+        }
+
+        return true;
     }
 } // namespace
 
 
-// ShaderProgram needs the shaders to be compiled
-// at the moment!
-bool compile_and_link(ShaderProgram& shader_program) {
-
-    auto& vertex_shader = shader_program.vertex_shader;
-    if (vertex_shader.address <= 0) // are opengl addresses always > 0??
-    {
-        return false;
-    }
-
-    auto& fragment_shader = shader_program.fragment_shader;
-    if (fragment_shader.address <= 0) {
-        return false;
-    }
-
-    auto& geometry_shader = shader_program.geometry_shader;
-    if (geometry_shader.address <= 0) {
-        return false;
-    }
-
-    shader_program.address = generate_address();
-
-    // TODO : print some stupid error messages on failures
-    if (!attach_shaders(shader_program)) {
-        return false;
-    }
-
-    if (!link_shaders(shader_program)) {
-        return false;
-    }
-
-    if (!detach_shaders(shader_program)) {
-        return false;
-    }
-
-    return true;
-}
-
-bool use_shader_program(ShaderProgram const& program) {
-    if (program.address != 0) {
-        glUseProgram(program.address);
+bool ShaderProgram::use() {
+    if (address != 0) {
+        glUseProgram(address);
     }
 
     return false;
 }
 
-bool unuse_shader_program(ShaderProgram const& /* program */) {
+bool ShaderProgram::unuse() {
     glUseProgram(0);
     return true;
 }
 
-bool set_uniform(ShaderProgram const& shader_program, const std::string& name, const int& value) {
-    const auto address = shader_program.address;
+bool ShaderProgram::set_uniform(const std::string& name, const int& value) {
     if (address > 0) {
         // Get the location of the uniform then set it
         int uniformLoc = glGetUniformLocation(address, name.c_str());
@@ -161,63 +137,7 @@ bool set_uniform(ShaderProgram const& shader_program, const std::string& name, c
     return false;
 }
 
-std::optional<ShaderProgram> create_shader_program(
-    ShaderData const& vertex_shader_glsl, ShaderData const& fragment_shader_glsl) {
-
-    // TODO : display the errors in logs
-    auto const vertex_shader = compile_shader(vertex_shader_glsl);
-    if (!vertex_shader) {
-        return std::nullopt;
-    }
-
-    auto const fragment_shader = compile_shader(fragment_shader_glsl);
-    if (!fragment_shader) {
-        return std::nullopt;
-    }
-
-    // Create address for shader program
-    auto const address = glCreateProgram();
-    if (address == 0) {
-        return std::nullopt;
-    }
-
-    CompiledShader const geometry_shader{.address = 0};
-    return ShaderProgram{.vertex_shader = *vertex_shader,
-     .fragment_shader                   = *fragment_shader,
-     .geometry_shader                   = geometry_shader,
-     .address                           = address};
-}
-
-std::optional<ShaderProgram> create_shader_program(ShaderData const& vertex_shader_glsl,
-    ShaderData const& geometry_shader_glsl, ShaderData const& fragment_shader_glsl) {
-    // TODO : display the errors in logs
-    auto const vertex_shader = compile_shader(vertex_shader_glsl);
-    if (!vertex_shader) {
-        return std::nullopt;
-    }
-
-    auto const geometry_shader = compile_shader(geometry_shader_glsl);
-    if (!geometry_shader) {
-        return std::nullopt;
-    }
-
-    auto const fragment_shader = compile_shader(fragment_shader_glsl);
-    if (!fragment_shader) {
-        return std::nullopt;
-    }
-
-    // Create address for shader program
-    auto const address = glCreateProgram();
-    if (address == 0) {
-        return std::nullopt;
-    }
-
-    return ShaderProgram{*vertex_shader, *fragment_shader, *geometry_shader, address};
-}
-
-
-bool set_uniform(ShaderProgram const& shader_program, const std::string& name, const unsigned int& value) {
-    const auto address = shader_program.address;
+bool ShaderProgram::set_uniform(const std::string& name, const unsigned int& value) {
     if (address > 0) {
         // Get the location of the uniform then set it
         int uniformLoc = glGetUniformLocation(address, name.c_str());
@@ -229,8 +149,7 @@ bool set_uniform(ShaderProgram const& shader_program, const std::string& name, c
     return false;
 }
 
-bool set_uniform(ShaderProgram const& shader_program, const std::string& name, const float& value) {
-    const auto address = shader_program.address;
+bool ShaderProgram::set_uniform(const std::string& name, const float& value) {
     if (address > 0) {
         int uniformLoc = glGetUniformLocation(address, name.c_str());
         glUniform1f(uniformLoc, value);
@@ -241,8 +160,7 @@ bool set_uniform(ShaderProgram const& shader_program, const std::string& name, c
     return true;
 }
 
-bool set_uniform(ShaderProgram const& shader_program, const std::string& name, const double& value) {
-    const auto address = shader_program.address;
+bool ShaderProgram::set_uniform(const std::string& name, const double& value) {
     if (address > 0) {
         int uniformLoc = glGetUniformLocation(address, name.c_str());
         glUniform1d(uniformLoc, value);
@@ -253,8 +171,7 @@ bool set_uniform(ShaderProgram const& shader_program, const std::string& name, c
     return false;
 }
 
-bool set_uniform(ShaderProgram const& shader_program, const std::string& name, const glm::vec2& value) {
-    const auto address = shader_program.address;
+bool ShaderProgram::set_uniform(const std::string& name, const glm::vec2& value) {
     if (address > 0) {
         int uniformLoc = glGetUniformLocation(address, name.c_str());
         glUniform2f(uniformLoc, value.x, value.y);
@@ -265,8 +182,7 @@ bool set_uniform(ShaderProgram const& shader_program, const std::string& name, c
     return false;
 }
 
-bool set_uniform(ShaderProgram const& shader_program, std::string const& name, glm::vec3 const& value) {
-    const auto address = shader_program.address;
+bool ShaderProgram::set_uniform(std::string const& name, glm::vec3 const& value) {
     if (address > 0) {
         int uniformLoc = glGetUniformLocation(address, name.c_str());
         glUniform3f(uniformLoc, value.x, value.y, value.z);
@@ -277,8 +193,7 @@ bool set_uniform(ShaderProgram const& shader_program, std::string const& name, g
     return false;
 }
 
-bool set_uniform(ShaderProgram const& shader_program, const std::string& name, const glm::mat4& value) {
-    const auto address = shader_program.address;
+bool ShaderProgram::set_uniform(const std::string& name, const glm::mat4& value) {
     if (address > 0) {
         GLint uniformLoc = glGetUniformLocation(address, name.c_str());
         glUniformMatrix4fv(uniformLoc, 1, GL_FALSE, glm::value_ptr(value));
@@ -289,17 +204,55 @@ bool set_uniform(ShaderProgram const& shader_program, const std::string& name, c
     return false;
 }
 
-/*
-ShaderProgram::~ShaderProgram()
-{
-	// Delete if the address exists
-	if (address_ > 0) {
+std::unique_ptr<ShaderProgram> create_shader_program(
+    ShaderData const& vertex_shader_glsl, ShaderData const& fragment_shader_glsl) {
 
- *
- *
- *
- *
- * glDeleteProgram(address_);
-	}
+    // TODO : display the errors in logs
+    auto const vertex_shader = compile_shader(vertex_shader_glsl);
+    if (!vertex_shader) {
+        return {};
+    }
+
+    auto const fragment_shader = compile_shader(fragment_shader_glsl);
+    if (!fragment_shader) {
+        return {};
+    }
+
+    // Create address for shader program
+    auto const address = glCreateProgram();
+    if (address == 0) {
+        return {};
+    }
+
+    CompiledShader const geometry_shader{.address = 0};
+    compile_and_link(address, vertex_shader->address, geometry_shader.address, fragment_shader->address);
+    return std::make_unique<ShaderProgram>(*vertex_shader, *fragment_shader, geometry_shader, address);
 }
-*/
+
+std::unique_ptr<ShaderProgram> create_shader_program(ShaderData const& vertex_shader_glsl,
+    ShaderData const& geometry_shader_glsl, ShaderData const& fragment_shader_glsl) {
+    // TODO : display the errors in logs
+    auto const vertex_shader = compile_shader(vertex_shader_glsl);
+    if (!vertex_shader) {
+        return {};
+    }
+
+    auto const geometry_shader = compile_shader(geometry_shader_glsl);
+    if (!geometry_shader) {
+        return {};
+    }
+
+    auto const fragment_shader = compile_shader(fragment_shader_glsl);
+    if (!fragment_shader) {
+        return {};
+    }
+
+    // Create address for shader program
+    auto const address = glCreateProgram();
+    if (address == 0) {
+        return {};
+    }
+
+    compile_and_link(address, vertex_shader->address, geometry_shader->address, fragment_shader->address);
+    return std::make_unique<ShaderProgram>(*vertex_shader, *fragment_shader, *geometry_shader, address);
+}

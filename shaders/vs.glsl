@@ -1,7 +1,7 @@
 #version 330
-layout(location = 0) in vec3 aPos;
-layout(location = 1) in vec3 aNor;
-layout(location = 2) in vec4 aCol;
+in vec3 aPos;
+in vec3 aNor;
+in vec4 aCol;
 
 out vec3 normal;
 out vec4 colour;

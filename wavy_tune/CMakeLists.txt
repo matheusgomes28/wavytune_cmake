@@ -7,7 +7,8 @@ target_link_libraries(wavy_tune
  PRIVATE
   GLEW::GLEW
   cxxopts::cxxopts
-  miniaudio::miniaudio
-  glfw
   fourier
-  shaders)
+  glfw
+  miniaudio::miniaudio
+  shaders
+  wavytune::graphics)

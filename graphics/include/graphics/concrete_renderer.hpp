@@ -11,8 +11,8 @@
 #include <queue>
 #include <vector>
 
+struct ShaderProgram;
 class DrawBuffer;
-class ShaderProgram;
 
 /**
  * @brief Represents type of draw data supported
@@ -40,19 +40,24 @@ class VaoCreationException : public std::exception {
     }
 };
 
+class VboCreationException : public std::exception {
+    virtual const char* what() const throw() {
+        return "Could not creat Vertex Buffer Object";
+    }
+};
+
 
 class ConcreteRenderer : public AbstractRenderer {
 
 public:
-    ConcreteRenderer();
+    ConcreteRenderer(std::unique_ptr<ShaderProgram>&& shader);
     ~ConcreteRenderer();
 
 
     //! overrides
     void render(const glm::mat4& proj, const glm::mat4& view) override;
     void send_gpu_data() override;
-    void queue_data(DrawBufferPtr&& dataPtr) override;
-    void set_shader(unsigned int address) override;
+    void queue_data(DrawBuffer&& dataPtr) override;
 
     // TODO : Wtf are these for?
     void set_offset(float offset);
@@ -60,7 +65,7 @@ public:
 
 
 private:
-    std::vector<DrawBufferPtr> draw_buffers_;
+    std::vector<DrawBuffer> draw_buffers_;
 
     /**
      * @brief Map of buffer type to VBO data to be drawn on
@@ -82,7 +87,12 @@ private:
      */
     std::queue<DrawBuffer> pending_buffers_;
 
-    unsigned int shader_address_;
+    /**
+     * @brief pointer to the shader program owned by
+     * this renderer.
+     */
+    std::unique_ptr<ShaderProgram> shader_program_;
+
     unsigned points_to_draw_;
 
     void _allocate_gpu_memory();
