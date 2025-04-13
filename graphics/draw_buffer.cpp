@@ -61,6 +61,10 @@ void DrawBuffer::set_indices(std::vector<std::uint32_t> const& indices) {
     indices_ = indices;
 }
 
+void DrawBuffer::set_indices(std::vector<std::uint32_t>&& indices) {
+    indices_ = std::move(indices);
+}
+
 void DrawBuffer::set_colors(std::vector<glm::vec4> const& colors) {
     colors_ = colors;
 }

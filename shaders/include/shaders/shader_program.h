@@ -1,16 +1,17 @@
 #ifndef SHADER_SHADER_PROGRAM_H
 #define SHADER_SHADER_PROGRAM_H
 
-#include "shaders/shader.h"
-
-// Includes from the STD
-#include <memory>
-#include <string>
+#include <shaders/shader.h>
 
 // Includes from third party
 #include <GL/glew.h>
 
 #include <glm/glm.hpp>
+
+// Includes from the STD
+#include <memory>
+#include <string>
+#include <span>
 
 struct CompiledShader {
     GLuint address;
@@ -35,6 +36,10 @@ struct ShaderProgram {
     bool set_uniform(const std::string& name, const glm::vec3& value);
 
     bool set_uniform(const std::string& name, const glm::mat4& value);
+
+    bool set_uniform(const std::string& name, std::span<float const> values);
+
+    bool set_uniform(const std::string& name, std::span<glm::vec3 const> values);
 
     bool use();
     

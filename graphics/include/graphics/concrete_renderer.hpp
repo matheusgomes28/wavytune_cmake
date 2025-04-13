@@ -8,7 +8,9 @@
 #include <cstdint>
 #include <exception>
 #include <map>
+#include <memory>
 #include <queue>
+#include <span>
 #include <vector>
 
 struct ShaderProgram;
@@ -23,11 +25,10 @@ class DrawBuffer;
  * floats.
  *  + Normal: x,y,z packed vector or floats.
  *  + Texture: u,v packed vector or floats.
- *  + Color:
- * r,g,b,a
- * packed vector or floats.
+ *  + Color: r,g,b,a packed colors
+ *  + Index: i indices (uint32)
  */
-enum class BufferType { Vertex, Normal, Texture, Color };
+enum class BufferType { Vertex, Normal, Texture, Color, Index };
 
 
 /**
@@ -53,16 +54,10 @@ public:
     ConcreteRenderer(std::unique_ptr<ShaderProgram>&& shader);
     ~ConcreteRenderer();
 
-
     //! overrides
-    void render(const glm::mat4& proj, const glm::mat4& view) override;
+    void render(const glm::mat4& proj, const glm::mat4& view, const glm::mat4& rot, std::span<float const> heights, std::span<glm::vec3 const> offsets) override;
     void send_gpu_data() override;
     void queue_data(DrawBuffer&& dataPtr) override;
-
-    // TODO : Wtf are these for?
-    void set_offset(float offset);
-    void set_height(float height);
-
 
 private:
     std::vector<DrawBuffer> draw_buffers_;
@@ -100,8 +95,9 @@ private:
     void _set_gpu_vertex_attributes();
     void _set_gpu_normal_attributes();
     void _set_gpu_colour_attributes();
-    void _enable_gpu_buffers();
-    void _disable_gpu_buffers();
+    void _set_gpu_index_attributes();
+    void _enable_vertex_attributes();
+    void _disable_vertex_attributes();
 
     /**
      * @brief number of currently loaded vertex 
@@ -110,11 +106,7 @@ private:
     std::uint32_t normal_offset_;
     std::uint32_t color_offset_;
     // std::uint32_t texel_offset_;
-
-
-    // TODO : These are here for testing, remove them in prod
-    float height_;
-    float offset_;
+    std::uint32_t index_offset_;
 };
 
 #endif // RENDERER_CONCRETE_RENDERER_H

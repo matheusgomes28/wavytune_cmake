@@ -6,6 +6,7 @@
 // Includes from the STD
 #include <memory>
 #include <optional>
+#include <span>
 
 // Includes from third party
 #include <GL/glew.h>
@@ -125,83 +126,91 @@ bool ShaderProgram::unuse() {
 }
 
 bool ShaderProgram::set_uniform(const std::string& name, const int& value) {
-    if (address > 0) {
-        // Get the location of the uniform then set it
-        int uniformLoc = glGetUniformLocation(address, name.c_str());
-        glUniform1i(uniformLoc, value);
+    Expects(address > 0);
 
-        // TODO : check for errors before we return true
-        return true;
-    }
+    // Get the location of the uniform then set it
+    int uniformLoc = glGetUniformLocation(address, name.c_str());
+    glUniform1i(uniformLoc, value);
 
-    return false;
+    // TODO : check for errors before we return true
+    return true;
 }
 
 bool ShaderProgram::set_uniform(const std::string& name, const unsigned int& value) {
-    if (address > 0) {
-        // Get the location of the uniform then set it
-        int uniformLoc = glGetUniformLocation(address, name.c_str());
-        glUniform1ui(uniformLoc, value);
-        // TODO : check for errors before we return true
-        return true;
-    }
+    Expects(address > 0);
 
-    return false;
+    // Get the location of the uniform then set it
+    int uniformLoc = glGetUniformLocation(address, name.c_str());
+    glUniform1ui(uniformLoc, value);
+    // TODO : check for errors before we return true
+    return true;
 }
 
 bool ShaderProgram::set_uniform(const std::string& name, const float& value) {
-    if (address > 0) {
-        int uniformLoc = glGetUniformLocation(address, name.c_str());
-        glUniform1f(uniformLoc, value);
-        // TODO : check for errors before we return true
-        return true;
-    }
+    Expects(address > 0);
 
+    int uniformLoc = glGetUniformLocation(address, name.c_str());
+    glUniform1f(uniformLoc, value);
+    // TODO : check for errors before we return true
     return true;
 }
 
 bool ShaderProgram::set_uniform(const std::string& name, const double& value) {
-    if (address > 0) {
-        int uniformLoc = glGetUniformLocation(address, name.c_str());
-        glUniform1d(uniformLoc, value);
-        // TODO : check for errors before we return true
-        return true;
-    }
+    Expects(address > 0);
 
-    return false;
+    int uniformLoc = glGetUniformLocation(address, name.c_str());
+    glUniform1d(uniformLoc, value);
+    // TODO : check for errors before we return true
+    return true;
 }
 
 bool ShaderProgram::set_uniform(const std::string& name, const glm::vec2& value) {
-    if (address > 0) {
-        int uniformLoc = glGetUniformLocation(address, name.c_str());
-        glUniform2f(uniformLoc, value.x, value.y);
-        // TODO : check for errors before we return true
-        return true;
-    }
+    Expects(address > 0);
 
-    return false;
+    int uniformLoc = glGetUniformLocation(address, name.c_str());
+    glUniform2f(uniformLoc, value.x, value.y);
+    // TODO : check for errors before we return true
+    return true;
 }
 
 bool ShaderProgram::set_uniform(std::string const& name, glm::vec3 const& value) {
-    if (address > 0) {
-        int uniformLoc = glGetUniformLocation(address, name.c_str());
-        glUniform3f(uniformLoc, value.x, value.y, value.z);
-        // TODO : check for errors before we return true
-        return true;
-    }
+    Expects(address > 0);
 
-    return false;
+    int uniformLoc = glGetUniformLocation(address, name.c_str());
+    glUniform3f(uniformLoc, value.x, value.y, value.z);
+    // TODO : check for errors before we return true
+    return true;
 }
 
 bool ShaderProgram::set_uniform(const std::string& name, const glm::mat4& value) {
-    if (address > 0) {
-        GLint uniformLoc = glGetUniformLocation(address, name.c_str());
-        glUniformMatrix4fv(uniformLoc, 1, GL_FALSE, glm::value_ptr(value));
-        // TODO : check for errors before we return true
-        return true;
-    }
+    Expects(address > 0);
 
-    return false;
+    GLint uniformLoc = glGetUniformLocation(address, name.c_str());
+    glUniformMatrix4fv(uniformLoc, 1, GL_FALSE, glm::value_ptr(value));
+    // TODO : check for errors before we return true
+    return true;
+}
+
+bool ShaderProgram::set_uniform(const std::string& name, std::span<float const> values) {
+    Expects(address > 0);
+    Expects(values.size() > 0);
+
+    GLint uniformLoc = glGetUniformLocation(address, name.c_str());
+    glUniform1fv(uniformLoc, values.size(), &values[0]);
+
+    // TODO : check for errors before we return true
+    return true;
+}
+
+bool ShaderProgram::set_uniform(const std::string& name, std::span<glm::vec3 const> values) {
+    Expects(address > 0);
+    Expects(values.size() > 0);
+
+    GLint uniformLoc = glGetUniformLocation(address, name.c_str());
+    glUniform3fv(uniformLoc, values.size(), glm::value_ptr(values[0]));
+
+    // TODO : check for errors before we return true
+    return true;
 }
 
 std::unique_ptr<ShaderProgram> create_shader_program(

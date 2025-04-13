@@ -69,7 +69,8 @@ namespace {
         std::uint64_t offset;
         std::uint32_t size;
         std::uint32_t stride;
-        std::uint32_t type;
+        std::uint32_t data_type;
+        std::uint32_t buffer_type;
         bool normalized;
     };
 
@@ -79,7 +80,7 @@ namespace {
 
         std::vector<std::string> errors;
         errors = getError();
-        glBindBuffer(GL_ARRAY_BUFFER, vbo_address);
+        glBindBuffer(config.buffer_type, vbo_address);
         errors = getError();
 
         const std::int32_t pos_ptr = glGetAttribLocation(shader_address, attr_name.c_str());
@@ -87,10 +88,10 @@ namespace {
         Expects(pos_ptr >= 0);
 
         glVertexAttribPointer(
-            pos_ptr, config.size, config.type, config.normalized, config.stride, (GLvoid*) config.offset);
+            pos_ptr, config.size, config.data_type, config.normalized, config.stride, (GLvoid*) config.offset);
         errors = getError();
 
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindBuffer(config.buffer_type, 0);
         errors = getError();
     }
 
@@ -126,25 +127,25 @@ namespace {
         glDeleteBuffers(1, &buffer_id);
     }
 
-    void allocate_buffer_memory(std::uint32_t vbo, std::uint32_t size) {
+    void allocate_buffer_memory(std::uint32_t vbo, std::uint32_t buffer_type, std::uint32_t size) {
         Expects(vbo != 0);
 
         // TODO : Do we want to just provide a function that will copy
         // TODO : the data straight away? We're running an allocation THEN
         // TODO : a copy.
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_STATIC_DRAW);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindBuffer(buffer_type, vbo);
+        glBufferData(buffer_type, size, nullptr, GL_STATIC_DRAW);
+        glBindBuffer(buffer_type, 0);
     }
 
     // TODO : This void* will be complained at, maybe we use a span???
     // TODO : This should probably return an error in case data is larger than buffer
-    std::uint32_t add_buffer_data(std::span<std::uint8_t> data, std::uint32_t vbo, const std::uint32_t offset) {
+    std::uint32_t add_buffer_data(std::span<std::uint8_t> data, std::uint32_t vbo, std::uint32_t buffer_type, const std::uint32_t offset) {
         Expects(vbo != 0);
 
         // TODO : These can throw a lot of errors, make sure we catch them
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferSubData(GL_ARRAY_BUFFER, offset, data.size(), reinterpret_cast<void*>(data.data()));
+        glBindBuffer(buffer_type, vbo);
+        glBufferSubData(buffer_type, offset, data.size(), reinterpret_cast<void*>(data.data()));
 
         // TODO : This is wrong, we should check if we actually copied everything
         return static_cast<std::uint32_t>(data.size());
@@ -152,15 +153,15 @@ namespace {
 
     // TODO : Ideally
     template <typename T>
-    std::uint32_t add_buffer_data(std::vector<T>& vertices, std::uint32_t vbo, std::uint32_t offset) {
+    std::uint32_t add_buffer_data(std::vector<T>& vertices, std::uint32_t vbo, std::uint32_t buffer_type, std::uint32_t offset) {
         std::uint32_t const vertices_byte_size = vertices.size() * sizeof(T);
         std::span<std::uint8_t> const vertices_span{reinterpret_cast<std::uint8_t*>(&vertices[0]), vertices_byte_size};
-        return add_buffer_data(vertices_span, vbo, offset);
+        return add_buffer_data(vertices_span, vbo, buffer_type, offset);
     }
 } // namespace
 
 
-ConcreteRenderer::ConcreteRenderer(std::unique_ptr<ShaderProgram>&& shader) : vao_{0}, shader_program_{std::move(shader)}, points_to_draw_{0}, height_{1}, offset_{0} {
+ConcreteRenderer::ConcreteRenderer(std::unique_ptr<ShaderProgram>&& shader) : vao_{0}, shader_program_{std::move(shader)}, points_to_draw_{0}, vertex_offset_{0}, normal_offset_{0}, color_offset_{0}, index_offset_{0} {
     
     // Debug to make sure our shader is actually valid
     Expects(shader_program_);
@@ -173,7 +174,7 @@ ConcreteRenderer::ConcreteRenderer(std::unique_ptr<ShaderProgram>&& shader) : va
     }
     vao_ = *vao_address;
 
-    std::array<BufferType, 3> constexpr types = {BufferType::Vertex, BufferType::Normal, BufferType::Color};
+    std::array<BufferType, 4> constexpr types = {BufferType::Vertex, BufferType::Normal, BufferType::Color, BufferType::Index};
     for (auto const type : types) {
 
         auto vbo_address = create_vbo();
@@ -215,6 +216,7 @@ void ConcreteRenderer::send_gpu_data() {
     _set_gpu_colour_attributes();
     errors = getError();
 
+
     // TODO : Do we need this call here?
     glUseProgram(0);
     shader_program_->unuse();
@@ -235,16 +237,19 @@ void ConcreteRenderer::_allocate_gpu_memory() {
     auto const vertex_address = vbos_[BufferType::Vertex];
     auto const normal_address = vbos_[BufferType::Normal];
     auto const color_vbo      = vbos_[BufferType::Color];
+    auto const index_vbo = vbos_[BufferType::Index];
 
-    allocate_buffer_memory(vertex_address, DEFAULT_BUFFER_SIZE);
-    allocate_buffer_memory(normal_address, DEFAULT_BUFFER_SIZE);
-    allocate_buffer_memory(color_vbo, DEFAULT_BUFFER_SIZE);
+    allocate_buffer_memory(vertex_address, GL_ARRAY_BUFFER, DEFAULT_BUFFER_SIZE);
+    allocate_buffer_memory(normal_address, GL_ARRAY_BUFFER, DEFAULT_BUFFER_SIZE);
+    allocate_buffer_memory(color_vbo, GL_ARRAY_BUFFER, DEFAULT_BUFFER_SIZE);
+    allocate_buffer_memory(index_vbo, GL_ELEMENT_ARRAY_BUFFER, DEFAULT_BUFFER_SIZE);
 }
 
 void ConcreteRenderer::_populate_gpu_buffers() {
     auto const vertex_vbo = vbos_[BufferType::Vertex];
     auto const normal_vbo = vbos_[BufferType::Normal];
     auto const color_vbo  = vbos_[BufferType::Color];
+    auto const index_vbo  = vbos_[BufferType::Index];
 
     while (!pending_buffers_.empty()) {
         auto draw_buffer = std::move(pending_buffers_.front());
@@ -252,14 +257,17 @@ void ConcreteRenderer::_populate_gpu_buffers() {
 
         // vertex data
         auto& vertices = draw_buffer.get_vertices();
-        vertex_offset_ += add_buffer_data(vertices, vertex_vbo, vertex_offset_);
-        points_to_draw_ += vertices.size();
+        vertex_offset_ += add_buffer_data(vertices, vertex_vbo, GL_ARRAY_BUFFER, vertex_offset_);
 
         auto& normals = draw_buffer.get_normals();
-        normal_offset_ += add_buffer_data(normals, normal_vbo, normal_offset_);
+        normal_offset_ += add_buffer_data(normals, normal_vbo, GL_ARRAY_BUFFER, normal_offset_);
 
         auto& colors = draw_buffer.get_colours();
-        color_offset_ += add_buffer_data(colors, color_vbo, color_offset_);
+        color_offset_ += add_buffer_data(colors, color_vbo, GL_ARRAY_BUFFER, color_offset_);
+
+        auto& indices = draw_buffer.get_indices();
+        index_offset_ += add_buffer_data(indices, index_vbo, GL_ELEMENT_ARRAY_BUFFER, index_offset_);
+        points_to_draw_ += indices.size();
     }
 }
 
@@ -269,7 +277,8 @@ void ConcreteRenderer::_set_gpu_vertex_attributes() {
         .offset = 0,
         .size = 3,
         .stride = 0,
-        .type = GL_FLOAT,
+        .data_type = GL_FLOAT,
+        .buffer_type = GL_ARRAY_BUFFER,
         .normalized = false,
     };
     
@@ -283,7 +292,8 @@ void ConcreteRenderer::_set_gpu_normal_attributes() {
         .offset = 0,
         .size = 3,
         .stride = 0,
-        .type = GL_FLOAT,
+        .data_type = GL_FLOAT,
+        .buffer_type = GL_ARRAY_BUFFER,
         .normalized = false,
     };
 
@@ -297,14 +307,30 @@ void ConcreteRenderer::_set_gpu_colour_attributes() {
         .offset = 0,
         .size = 4,
         .stride = 0,
-        .type = GL_FLOAT,
+        .data_type = GL_FLOAT,
+        .buffer_type = GL_ARRAY_BUFFER,
         .normalized = true,
     };
     auto const color_vbo = vbos_[BufferType::Color];
     configure_vertex_attrib(shader_program_->address, color_vbo, "aCol", buffer_config);
 }
 
-void ConcreteRenderer::render(const glm::mat4& proj, const glm::mat4& view) {
+// void ConcreteRenderer::_set_gpu_index_attributes() {
+
+//     VertexAttribPointerConfig constexpr buffer_config{
+//         .offset = 0,
+//         .size = 4,
+//         .stride = 0,
+//         .data_type = GL_FLOAT,
+//         .buffer_type = GL_ELEMENT_ARRAY_BUFFER,
+//         .normalized = true,
+//     };
+//     auto const index_vbo = vbos_[BufferType::Index];
+//     configure_vertex_attrib(shader_program_->address, index_vbo, "aCol", buffer_config);
+// }
+
+// TODO : Ideally, we want to pass a list of uniforms to be set here (variant)
+void ConcreteRenderer::render(const glm::mat4& proj, const glm::mat4& view, glm::mat4 const& rot, std::span<float const> heights, std::span<glm::vec3 const> offsets) {
     auto errors = getError();
 
     shader_program_->use();
@@ -315,30 +341,39 @@ void ConcreteRenderer::render(const glm::mat4& proj, const glm::mat4& view) {
 
     shader_program_->set_uniform("proj", proj);
     shader_program_->set_uniform("view", view);
-    shader_program_->set_uniform("rotate", glm::mat4(1));
-    shader_program_->set_uniform("height", height_);
-    shader_program_->set_uniform("offset", offset_);
+    shader_program_->set_uniform("rotate", rot);
+
+    shader_program_->set_uniform("heights", {heights});
+    shader_program_->set_uniform("offsets", {offsets});
+
 
     // Enabling some features
+    errors = getError();
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
+    errors = getError();
 
-    glBindVertexArray(vao_);
-    _enable_gpu_buffers();
+    _enable_vertex_attributes();
+    errors = getError();
 
     // Enable vertices and normals for drawing
-    glDrawArrays(GL_TRIANGLES, 0, points_to_draw_);
-    glBindVertexArray(0);
+    glDrawElementsInstanced(GL_TRIANGLES, points_to_draw_, GL_UNSIGNED_INT, 0, 100);
+    errors = getError();
+    // glDrawArrays(GL_TRIANGLES, 0, points_to_draw_);
 
 
-    _disable_gpu_buffers();
+    _disable_vertex_attributes();
+    errors = getError();
 
     shader_program_->unuse();
     errors = getError();
     errors = getError();
 }
 
-void ConcreteRenderer::_enable_gpu_buffers() {
+void ConcreteRenderer::_enable_vertex_attributes() {
+    glBindVertexArray(vao_);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbos_[BufferType::Index]);
+
     // Get the layout locations
     GLuint vertexPtr = glGetAttribLocation(shader_program_->address, "aPos");
     glEnableVertexAttribArray(vertexPtr);
@@ -350,7 +385,7 @@ void ConcreteRenderer::_enable_gpu_buffers() {
     glEnableVertexAttribArray(colourPtr);
 }
 
-void ConcreteRenderer::_disable_gpu_buffers() {
+void ConcreteRenderer::_disable_vertex_attributes() {
     // Get the layout locations
     GLuint vertexPtr = glGetAttribLocation(shader_program_->address, "aPos");
     glDisableVertexAttribArray(vertexPtr);
@@ -360,6 +395,9 @@ void ConcreteRenderer::_disable_gpu_buffers() {
 
     GLuint colourPtr = glGetAttribLocation(shader_program_->address, "aCol");
     glDisableVertexAttribArray(colourPtr);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 }
 
 
@@ -370,12 +408,4 @@ void ConcreteRenderer::queue_data(DrawBuffer&& buffer) {
 
     // TODO : Is this the right call here for efficiency?
     pending_buffers_.emplace(std::move(buffer));
-}
-
-void ConcreteRenderer::set_height(float h) {
-    height_ = h;
-}
-
-void ConcreteRenderer::set_offset(float h) {
-    offset_ = h;
 }

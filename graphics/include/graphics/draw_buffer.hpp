@@ -77,16 +77,28 @@ public:
         colors_ = std::move(colors);
         return *this;
     }
+    
+    DrawBufferBuilder& add_indices(std::vector<std::uint32_t> const& indices) {
+        indices_ = indices;
+        return *this;
+    }
+
+    DrawBufferBuilder& add_indices(std::vector<std::uint32_t>&& indices) {
+        indices_ = std::move(indices);
+        return *this;
+    }
 
     DrawBuffer build() {
         DrawBuffer buffer;
         buffer.set_vertices(std::move(vertices_));
         buffer.set_normals(std::move(normals_));
         buffer.set_colors(std::move(colors_));
+        buffer.set_indices(std::move(indices_));
         
         vertices_ = {};
         normals_ = {};
         colors_ = {};
+        indices_ = {};
 
         return buffer;
     }
@@ -95,6 +107,7 @@ private:
     std::vector<glm::vec3> vertices_;
     std::vector<glm::vec3> normals_;
     std::vector<glm::vec4> colors_;
+    std::vector<std::uint32_t> indices_;
 };
 
 #endif // GRAPHICS_ABSTRACT_DRAW_BUFFER_H
