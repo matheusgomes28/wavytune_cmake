@@ -74,6 +74,7 @@
             "inherits": ["unix-ninja", "deb", "conan"],
             "cacheVariables": {
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/build/unix-deb-ninja/install",
+                "CMAKE_CXX_FLAGS": "-fsanitize=address -fno-omit-frame-pointer",
                 "BUILD_PROFILER": true
             }
         },

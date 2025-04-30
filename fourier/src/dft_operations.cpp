@@ -1,5 +1,7 @@
 #include <fourier/dft_operations.h>
 
+#include <iostream>
+
 using namespace wt::matrix;
 
 namespace wt::ft {
@@ -85,6 +87,7 @@ fft_helper(const signal &input,
 
   auto half_divisor = static_cast<std::size_t>(1) << partition_order.size();
   if ((input.size() / half_divisor) > 8) {
+
     std::vector<FFT_PARTITION> even_partition_order{partition_order};
     even_partition_order.push_back(FFT_PARTITION::EVEN);
     std::vector<FFT_PARTITION> odd_partition_order{partition_order};

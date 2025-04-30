@@ -13,6 +13,7 @@ if (WIN32)
     set(MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
+add_subdirectory(analysis)
 add_subdirectory(fourier)
 add_subdirectory(graphics)
 add_subdirectory(matrix)

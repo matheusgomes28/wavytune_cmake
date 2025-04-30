@@ -11,6 +11,7 @@ class WavyTuneConan(ConanFile):
 		self.requires("glfw/3.4"),
 		self.requires("glm/1.0.1"),
 		self.requires("gtest/1.16.0"),
+		self.requires("kissfft/131.1.0"),
 		self.requires("miniaudio/0.11.21"),
 		self.requires("ms-gsl/4.1.0"),
 
