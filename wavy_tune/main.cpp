@@ -48,7 +48,7 @@ extern "C" {
 
 namespace {
 
-    static std::atomic_uint8_t global_volume = 127;
+    static std::atomic_uint8_t global_volume = 50;
 
     struct AudioData {
         ma_decoder decoder;
@@ -105,14 +105,17 @@ namespace {
      * @brief Converts the audio int32 data in source to float32,
      * by normalising all values between
 
-     * * [-1.0f, 1.0f].
+ * *
+     * [-1.0f, 1.0f].
      * @param destination the destination buffer, must have pre-allcoated
      * `size *
      *
-     * sizeof(float)` bytes ready to be overriden. 
+
+     * * sizeof(float)` bytes ready to be overriden. 
      * @param source the source array of values to convert, must
 
-     * * have
+
+     * * * have
      * `size * sizeof(int32)` bytes to be read from.
      */
     void s32_to_f32(void* destination, void* source, std::size_t size) {
@@ -120,29 +123,31 @@ namespace {
 
         // Running buffer to convert values
         constexpr std::size_t buffer_size = 512;
-        std::array<float, buffer_size> buffer{};
-
+        const auto int_sample_bytes = ma_get_bytes_per_sample(ma_format_s32);
+        const auto float_sample_bytes = ma_get_bytes_per_sample(ma_format_f32);
+        
         // calculate how many runs of the buffer we need
         std::size_t const whole_buffers = size / buffer_size;
         std::size_t const remaining     = size - (whole_buffers * buffer_size);
         Expects(remaining < buffer_size);
-
+        
+        std::array<float, buffer_size> buffer{};
         std::size_t buffer_offset = 0;
-        for (std::size_t i = 0; i < whole_buffers; ++i, ++buffer_offset) {
+        for (std::size_t i = 0; i < whole_buffers; ++i, buffer_offset += buffer_size) {
 
             // convert each one of them
             for (std::size_t j = 0; j < buffer_size; ++j) {
                 buffer[j] = static_cast<ma_int32*>(source)[buffer_offset + j] / 2147483648.0f;
             }
             memcpy(static_cast<float*>(destination) + buffer_offset, buffer.data(),
-                buffer_size * ma_get_bytes_per_sample(ma_format_s32));
+                buffer_size * int_sample_bytes);
         }
 
         for (std::size_t j = 0; j < remaining; ++j) {
-            buffer[j] = static_cast<ma_int32*>(source)[buffer_offset + j];
+            buffer[j] = static_cast<ma_int32*>(source)[buffer_offset + j] / 2147483648.0f;
         }
         memcpy(static_cast<float*>(destination) + buffer_offset, buffer.data(),
-            remaining * ma_get_bytes_per_sample(ma_format_s32));
+            remaining * float_sample_bytes);
     }
 
     // Works on f32 only!
@@ -177,14 +182,18 @@ namespace {
      * @brief Read data from the current circular audio buffer into the given
      * data buffer.
      * @param
-     * buffer the miniaudio circular buffer.
+
+     * * buffer the miniaudio circular buffer.
      * @param data the destination for the read data.
-     * @param frames
+     * @param
+     * frames
      * the desired number of frames to read.
      * @param format the format of the device playback.
-     * @param
+
+     * * @param
      * channels number of channels.
-     * @return the number of samples actually read into the data buffer.
+     * @return the number of samples actually read into the data
+     * buffer.
      */
     [[nodiscard]] ma_uint32 read_from_buffer(
         ma_pcm_rb* buffer, void* data, ma_uint32 frames, ma_format format, std::size_t channels) {
@@ -208,21 +217,17 @@ namespace {
         result = ma_pcm_rb_commit_read(buffer, actually_read);
         Expects((result == MA_SUCCESS) || (result == MA_AT_END));
         return actually_read;
-
-        // Read the entire bytes
-        // if ((result == MA_SUCCESS) || (result == MA_AT_END)) {
-        //     return actually_read;
-        // }
-        // return (result == MA_SUCCESS) || (result == MA_AT_END);
     }
 
     /**
      * @brief This function will scale the volume down depending on
      * what volume level is passed in.
 
-     * * @param device the audio device.
+ * *
+     * @param device the audio device.
      * @param output the buffer with the output audio data.
      * @param
+     *
      * frames_read how many frames the output buffer has.
      * @param vol the volume, must be 0-255.
      */
@@ -524,22 +529,6 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    result = ma_pcm_rb_init(ma_format_f32, 2, 1024, nullptr, nullptr, &user_data.buffer);
-
-    // std::vector<float> test_write(20, 10);
-    // std::vector<float> test_read(20);
-    // if (!write_to_buffer(&user_data.buffer, test_write.data(), 10, ma_format_f32, 2)) {
-    //     return -1;
-    // }
-    // if (!read_from_buffer(&user_data.buffer, test_read.data(), 20, ma_format_f32, 2)) {
-    //     return -1;
-    // }
-
-    if (result != MA_SUCCESS) {
-        printf("Could not create buffer");
-        return -2;
-    }
-
 
     result = ma_decoder_init_file(args->audio_path.c_str(), NULL, &user_data.decoder);
     if (result != MA_SUCCESS) {
@@ -554,6 +543,14 @@ int main(int argc, char** argv) {
     deviceConfig.sampleRate        = user_data.decoder.outputSampleRate;
     deviceConfig.dataCallback      = data_callback;
     deviceConfig.pUserData         = &user_data;
+
+    result = ma_pcm_rb_init(
+        deviceConfig.playback.format, deviceConfig.playback.channels, 1024, nullptr, nullptr, &user_data.buffer);
+
+    if (result != MA_SUCCESS) {
+        printf("Could not create buffer");
+        return -2;
+    }
 
     if (ma_device_init(NULL, &deviceConfig, &device) != MA_SUCCESS) {
         printf("Failed to open playback device.\n");
@@ -698,38 +695,41 @@ int main(int argc, char** argv) {
     up  = {0, 1, 0};
 
 
-    std::array<float, wt::analysis::WINDOW_SIZE> raw_audio{}; // TODO : needs to have double signal size
+    std::array<std::int32_t, wt::analysis::WINDOW_SIZE> raw_audio{}; // TODO : needs to have double signal size
 
     wt::analysis::FftAnalyzer analyzer;
-    auto const hann_coefficients = wt::analysis::make_hann_coefficients<wt::analysis::WINDOW_SIZE>();
-    // analyzer.set_preprocessor([&](std::array<std::complex<float>, wt::analysis::WINDOW_SIZE>& buffer) {
-    //     // TODO : We want to apply the hann coefficients to the array
-    //     for (std::size_t i = 0; i < wt::analysis::WINDOW_SIZE; ++i) {
-    //         buffer[i] *= hann_coefficients[i];
-    //     }
-    // });
-    analyzer.set_postprocessor([](std::array<std::complex<float>, wt::analysis::WINDOW_SIZE>& buffer) {
+    auto const hann_coefficients_input = wt::analysis::make_hann_coefficients<wt::analysis::WINDOW_SIZE>();
+    auto const hann_coefficients_output = wt::analysis::make_hann_coefficients<wt::analysis::WINDOW_SIZE / 2 + 1>();
+    analyzer.set_preprocessor([&](std::array<float, wt::analysis::WINDOW_SIZE>& buffer) {
+        // TODO : We want to apply the hann coefficients to the array
         for (std::size_t i = 0; i < wt::analysis::WINDOW_SIZE; ++i) {
-            std::complex<float> res = buffer[i];
-            buffer[i].real(std::norm(res));
-            buffer[i].imag(0.0f);
+            buffer[i] *= hann_coefficients_input[i];
         }
     });
+    // analyzer.set_postprocessor([](std::array<std::complex<float>, wt::analysis::WINDOW_SIZE>& buffer) {
+    //     for (std::size_t i = 0; i < wt::analysis::WINDOW_SIZE; ++i) {
+    //         std::complex<float> res = buffer[i];
+    //         buffer[i].real(std::norm(res));
+    //         buffer[i].imag(0.0f);
+    //     }
+    // });
 
     // Game loop - Main OpenGL rendering
     glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
-    
+
     std::size_t sample_counter = 0;
+    std::array<float, 100> heights{};
     while (!glfwWindowShouldClose(window)) {
 
         // TODO : Need to figure out why read_from_buffer is reading
         // TODO : dodgy data from the output into the raw_audio
         // TODO : buffer.
-        std::size_t samples_to_read = raw_audio.size() - sample_counter;
-        sample_counter += read_from_buffer(&user_data.buffer, raw_audio.data() + sample_counter, samples_to_read / 2,
-        ma_format_f32, device.playback.channels);
+        std::uint32_t samples_to_read = std::max(2u, static_cast<std::uint32_t>(raw_audio.size() - sample_counter)) / 2;
+        sample_counter += read_from_buffer(&user_data.buffer, raw_audio.data() + sample_counter, samples_to_read,
+            device.playback.format, device.playback.channels) * device.playback.channels;
 
-        sample_counter = sample_counter != raw_audio.size() ? samples_to_read : 0;
+        // TODO : There's an issue where we have left over frames
+        sample_counter = sample_counter < raw_audio.size() ? sample_counter : 0;
 
         // lookAt = glm::lookAt(cam.pos, cam.pos + cam.getDirection(), cam.getUp());
         look_at = glm::lookAt(cam.pos, cam.pos + cam.getDirection(), cam.getUp());
@@ -743,15 +743,24 @@ int main(int argc, char** argv) {
         // analysis into an array of floats representing the
         // frequency amount
         // auto const transform_complex = analyzer.analyze(wt::test::sin_10);
-        std::array<float, 100> heights{};
         if (sample_counter == 0) {
-            auto const transform_complex = analyzer.analyze(raw_audio);
-            std::array<float, wt::analysis::WINDOW_SIZE> transform{};
+            
+            // convert integer to floats for analysis
+            std::array<float, wt::analysis::WINDOW_SIZE> audio_floats;
+            s32_to_f32(audio_floats.data(), raw_audio.data(), raw_audio.size());
+
+            auto const transform_complex = analyzer.analyze(audio_floats);
+            std::array<float, wt::analysis::WINDOW_SIZE / 2 + 1> transform{};
 
             std::transform(begin(transform_complex), end(transform_complex), begin(transform),
-            [](std::complex<float> in) { return in.real(); });
+                [](std::complex<float> in) { return std::abs(in); });
 
-            heights = normalize(bin_pack<100>(transform), 10.0f);
+            // Remove the energy at (0)
+            for (int i = 0; i < transform.size(); i++) {
+                transform[i] *= hann_coefficients_output[i];
+            }
+            heights = bin_pack<100>(transform);
+            heights = normalize(heights, 10.0f);
         }
         // MARK: Sound analysis
 
