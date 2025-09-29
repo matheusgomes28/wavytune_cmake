@@ -1,3 +1,5 @@
+#include "window.hpp"
+
 #include <shaders/shader_builder.h>
 #include <shaders/shader_program.h>
 
@@ -23,6 +25,7 @@
 extern "C" {
 #include <miniaudio.h>
 }
+
 
 // #include "GLAbstractions/vao.h"
 // #include "GLAbstractions/vbo.h"
@@ -125,12 +128,12 @@ namespace {
         constexpr std::size_t buffer_size = 512;
         const auto int_sample_bytes = ma_get_bytes_per_sample(ma_format_s32);
         const auto float_sample_bytes = ma_get_bytes_per_sample(ma_format_f32);
-        
+
         // calculate how many runs of the buffer we need
         std::size_t const whole_buffers = size / buffer_size;
         std::size_t const remaining     = size - (whole_buffers * buffer_size);
         Expects(remaining < buffer_size);
-        
+
         std::array<float, buffer_size> buffer{};
         std::size_t buffer_offset = 0;
         for (std::size_t i = 0; i < whole_buffers; ++i, buffer_offset += buffer_size) {
@@ -314,30 +317,6 @@ constexpr size_t size(T (&)[N]) {
     return N;
 }
 
-struct Camera {
-    glm::vec3 pos;
-    glm::vec3 front;
-    glm::vec3 right;
-    glm::vec3 up;
-
-    glm::mat4 transform;
-
-    glm::vec3 getDirection() const {
-        return transform * glm::vec4(front, 1);
-    }
-
-    glm::vec3 getUp() const {
-        return transform * glm::vec4(up, 1);
-    }
-
-    glm::vec3 getRight() const {
-        return transform * glm::vec4(right, 1);
-    }
-};
-
-void resizeCallback(GLFWwindow* /* window */, int width, int height) {
-    glViewport(0, 0, width, height);
-}
 
 // MARK: Global configs
 // TODO : encapsulate all of this global look at stuff
@@ -396,113 +375,7 @@ glm::vec3 rotateVector(const glm::vec3& vector, const glm::vec3& from, const AXI
 }
 
 // MARK: Event callbacks (mouse, key)
-void key_cb(GLFWwindow* /* window */, int key, int /* scancode */, int action, int /* mods */) {
-    if (key == GLFW_KEY_W && ((action == GLFW_PRESS) || (action == GLFW_REPEAT))) {
-        cam.transform = glm::rotate(glm::radians(10.f), cam.getRight()) * cam.transform;
-    }
-    if (key == GLFW_KEY_S && ((action == GLFW_PRESS) || (action == GLFW_REPEAT))) {
-        cam.transform = glm::rotate(glm::radians(-10.f), cam.getRight()) * cam.transform;
-    }
-    if (key == GLFW_KEY_A && ((action == GLFW_PRESS) || (action == GLFW_REPEAT))) {
-        cam.transform = glm::rotate(glm::radians(10.f), cam.getUp()) * cam.transform;
-    }
-    if (key == GLFW_KEY_D && ((action == GLFW_PRESS) || (action == GLFW_REPEAT))) {
-        cam.transform = glm::rotate(glm::radians(-10.f), cam.getUp()) * cam.transform;
-    }
 
-    // Movements
-    if (key == GLFW_KEY_UP && ((action == GLFW_PRESS) || (action == GLFW_REPEAT))) {
-        cam.pos += cam.getDirection() * 0.5f;
-    }
-    if (key == GLFW_KEY_DOWN && ((action == GLFW_PRESS) || (action == GLFW_REPEAT))) {
-        cam.pos -= cam.getDirection() * 0.5f;
-    }
-    if (key == GLFW_KEY_RIGHT && ((action == GLFW_PRESS) || (action == GLFW_REPEAT))) {
-        cam.pos += cam.getRight() * 0.5f;
-    }
-    if (key == GLFW_KEY_LEFT && ((action == GLFW_PRESS) || (action == GLFW_REPEAT))) {
-        cam.pos -= cam.getRight() * 0.5f;
-    }
-
-    // Audio related
-    constexpr std::uint8_t VOLUME_STEP = 2u;
-    if (key == GLFW_KEY_J && ((action == GLFW_PRESS) || (action == GLFW_REPEAT))) {
-        auto const current_volume = global_volume.load();
-
-        constexpr std::uint8_t MAX_VOLUME = 127u;
-        if (current_volume < MAX_VOLUME - VOLUME_STEP) {
-            global_volume.fetch_add(VOLUME_STEP);
-            std::cout << "volume: " << static_cast<int>(current_volume + VOLUME_STEP) << "\n";
-        }
-    }
-    if (key == GLFW_KEY_K && ((action == GLFW_PRESS) || (action == GLFW_REPEAT))) {
-        auto const current_volume = global_volume.load();
-
-        constexpr std::uint8_t MIN_VOLUME = 0u;
-        if (current_volume > MIN_VOLUME + VOLUME_STEP) {
-            global_volume.fetch_sub(VOLUME_STEP);
-            std::cout << "volume: " << static_cast<int>(current_volume - VOLUME_STEP) << "\n";
-        }
-    }
-}
-
-void mouse_button_cb(GLFWwindow* /* window */, int button, int action, int /* mods */) {
-    if (button == GLFW_MOUSE_BUTTON_LEFT) {
-        if (action == GLFW_PRESS) {
-            mouse_down = true;
-            // Reset first mouse flag to true when mouse is clicked
-            first_mouse = true;
-        } else if (action == GLFW_RELEASE) {
-            mouse_down = false;
-            // Save the current rotation when mouse is released
-            rot = curr_rot;
-        }
-    }
-}
-
-void cursor_cb(GLFWwindow* /* window */, double xpos, double ypos) {
-    if (!mouse_down) {
-        return;
-    }
-
-    if (first_mouse) {
-        last_x      = xpos;
-        last_y      = ypos;
-        first_mouse = false;
-        return;
-    }
-
-    // Calculate mouse movement delta
-    float xoffset = xpos - last_x;
-    float yoffset = ypos - last_y;
-    last_x        = xpos;
-    last_y        = ypos;
-
-    // Sensitivity factor to control rotation speed
-    const float sensitivity = 0.005f;
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
-
-    // Create rotation matrices for x and y rotation
-    glm::mat4 xRotation = glm::rotate(glm::mat4(1.0f), yoffset, glm::vec3(1.0f, 0.0f, 0.0f));
-    glm::mat4 yRotation = glm::rotate(glm::mat4(1.0f), xoffset, glm::vec3(0.0f, 1.0f, 0.0f));
-
-    // Combine rotations (order matters!)
-    glm::mat4 newRotation = yRotation * xRotation;
-
-    // Apply to the existing rotation matrix
-    curr_rot = newRotation * curr_rot;
-
-    // Print current rotation matrix for debugging
-    std::cout << "Current Rotation Matrix:" << std::endl;
-    for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
-            std::cout << curr_rot[i][j] << " ";
-        }
-        std::cout << std::endl;
-    }
-    std::cout << "--------------------" << std::endl;
-}
 // MARK: End Event callbacks (mouse, key)
 
 unsigned vaoId          = 0;
@@ -584,18 +457,19 @@ int main(int argc, char** argv) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(800, 600, "TestingOut Window", NULL, NULL);
-    if (!window) {
-        std::cout << "Could not create window. Exiting..." << std::endl;
-        glfwTerminate();
-        return -1;
-    }
+    auto winddow = wt::Window{800, 600, "Testing Out Stream"};
+    // GLFWwindow* window = glfwCreateWindow(800, 600, "TestingOut Window", NULL, NULL);
+    // if (!window) {
+    //     std::cout << "Could not create window. Exiting..." << std::endl;
+    //     glfwTerminate();
+    //     return -1;
+    // }
 
     // Create the viewport
-    glViewport(0, 0, 800, 600);
-    glfwSetFramebufferSizeCallback(window, resizeCallback);
-    glfwMakeContextCurrent(window);
-
+    // glViewport(0, 0, 800, 600);
+    // glfwSetFramebufferSizeCallback(window, resizeCallback);
+    // glfwMakeContextCurrent(window);
+    //
     // Create the shader program
     glewInit(); // Initialise all the openGL macros
 
@@ -744,7 +618,6 @@ int main(int argc, char** argv) {
         // frequency amount
         // auto const transform_complex = analyzer.analyze(wt::test::sin_10);
         if (sample_counter == 0) {
-            
             // convert integer to floats for analysis
             std::array<float, wt::analysis::WINDOW_SIZE> audio_floats;
             s32_to_f32(audio_floats.data(), raw_audio.data(), raw_audio.size());

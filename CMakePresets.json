@@ -2,10 +2,17 @@
     "version": 2,
     "configurePresets": [
         {
-            "name": "conan",
+            "name": "conan-rel",
             "hidden": true,
             "cacheVariables": {
                 "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/conan/rel/conan_toolchain.cmake"
+            }
+        },
+        {
+            "name": "conan-deb",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/conan/deb/conan_toolchain.cmake"
             }
         },
         {
@@ -43,8 +50,8 @@
             "hidden": true,
             "generator": "Ninja",
             "cacheVariables": {
-                "CMAKE_C_COMPILER": "clang-19",
-		        "CMAKE_CXX_COMPILER": "clang++-19",
+                "CMAKE_C_COMPILER": "clang",
+		        "CMAKE_CXX_COMPILER": "clang++",
                 "CMAKE_CXX_FLAGS_INIT": "$env{CMAKE_CXX_FLAGS} -Werror -Wall -Wextra -pedantic"
             }
         },
@@ -61,7 +68,7 @@
             "name": "unix-rel-ninja",
             "displayName": "Unix Ninja Clang Release",
             "binaryDir": "${sourceDir}/build/unix-rel-ninja",
-            "inherits": ["unix-ninja", "rel", "conan"],
+            "inherits": ["unix-ninja", "rel", "conan-rel"],
             "cacheVariables": {
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/build/unix-rel-ninja/install",
                 "BUILD_PROFILER": true
@@ -71,7 +78,7 @@
             "name": "unix-deb-ninja",
             "displayName": "Unix Ninja Clang Debug",
             "binaryDir": "${sourceDir}/build/unix-deb-ninja",
-            "inherits": ["unix-ninja", "deb", "conan"],
+            "inherits": ["unix-ninja", "deb", "conan-deb"],
             "cacheVariables": {
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/build/unix-deb-ninja/install",
                 "CMAKE_CXX_FLAGS": "-fsanitize=address -fno-omit-frame-pointer",
