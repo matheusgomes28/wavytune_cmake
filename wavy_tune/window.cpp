@@ -1,7 +1,7 @@
-#include "camera.hpp"
 #define GLM_ENABLE_EXPERIMENTAL 1
 
 #include "window.hpp"
+#include "camera.hpp"
 
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -12,57 +12,32 @@
 #include <string>
 
 namespace {
+    wt::Camera make_default_camera() {
+        wt::Camera cam;
+        cam.pos       = {0, 0, 10};
+        cam.front     = {0, 0, -1};
+        cam.right     = {1, 0, 0};
+        cam.up        = {0, 1, 0};
+        cam.transform = glm::mat4{1};
+        return cam;
+    }
 } // namespace
 
 
 namespace wt {
-    Window::Window(std::uint32_t width, std::uint32_t height, std::string const& name)
-        : _width{width}, _height{height}, _name{name} {
-
-        GLFWwindow* window = glfwCreateWindow(width, height, name.c_str(), NULL, NULL);
-        _window            = GLFWwindow_ptr(window, [](GLFWwindow* window) { glfwDestroyWindow(window); });
-
-
-        if (!window) {
-            std::cout << "Could not create window. Exiting..." << std::endl;
-
-            // TODO : Need to sort out the catch block where this
-            // TODO : gets called
-            // glfwTerminate();
-            throw WindowCreationException();
-        }
-
-        // Useful for getting this info in callbacks
-        glfwSetWindowUserPointer(window, this);
-
-        _configure_viewport();
-        _configure_input_callbacks();
-    }
-
-    void Window::_configure_viewport() {
-        glViewport(0, 0, _width, _height);
-        glfwSetFramebufferSizeCallback(_window.get(), resize_callback);
-        glfwMakeContextCurrent(_window.get());
-    }
-
-    void Window::_configure_input_callbacks() {
-        glfwSetKeyCallback(_window, Window::keys_callback);
-        glfwSetMouseButtonCallback(_window.get(), Window::mouse_button_callback);
-        glfwSetCursorPosCallback(_window.get(), Window::cursor_callback);
-    }
-
+    /* Static Callback Methods */
     void Window::mouse_button_callback(GLFWwindow* window, int button, int action, int /* mods */) {
         auto instance = static_cast<Window*>(glfwGetWindowUserPointer(window));
 
         if (button == GLFW_MOUSE_BUTTON_LEFT) {
             if (action == GLFW_PRESS) {
                 // Reset first mouse flag to true when mouse is clicked
-                instance->_mouse_down = true;
+                instance->_mouse_down  = true;
                 instance->_first_mouse = true;
             } else if (action == GLFW_RELEASE) {
                 // Save the current rotation when mouse is released
                 instance->_mouse_down = false;
-                instance->_rot = instance->_curr_rot;
+                instance->_rot        = instance->_curr_rot;
             }
         }
     }
@@ -81,10 +56,10 @@ namespace wt {
         }
 
         // Calculate mouse movement delta
-        float offset_x = xpos - instance->_last_x;
-        float offset_y = ypos - instance->_last_y;
-        instance->_last_x        = xpos;
-        instance->_last_y        = ypos;
+        float offset_x    = xpos - instance->_last_x;
+        float offset_y    = ypos - instance->_last_y;
+        instance->_last_x = xpos;
+        instance->_last_y = ypos;
 
         // Sensitivity factor to control rotation speed
         constexpr float SENSITIVITY = 0.005f;
@@ -102,7 +77,7 @@ namespace wt {
         instance->_curr_rot = newRotation * instance->_curr_rot;
     }
 
-    void keys_callback(GLFWwindow* window, int key, int /* scancode */, int action, int /* mods */) {
+    void Window::keys_callback(GLFWwindow* window, int key, int /* scancode */, int action, int /* mods */) {
         auto instance = static_cast<Window*>(glfwGetWindowUserPointer(window));
 
         Camera& cam = instance->_cam;
@@ -134,31 +109,83 @@ namespace wt {
             cam.pos -= cam.getRight() * 0.5f;
         }
 
+        // TODO : This should be somewhere else
         // Audio related
-        constexpr std::uint8_t VOLUME_STEP = 2u;
-        if (key == GLFW_KEY_J && ((action == GLFW_PRESS) || (action == GLFW_REPEAT))) {
-            auto const current_volume = global_volume.load();
-
-            constexpr std::uint8_t MAX_VOLUME = 127u;
-            if (current_volume < MAX_VOLUME - VOLUME_STEP) {
-                global_volume.fetch_add(VOLUME_STEP);
-                std::cout << "volume: " << static_cast<int>(current_volume + VOLUME_STEP) << "\n";
-            }
-        }
-        if (key == GLFW_KEY_K && ((action == GLFW_PRESS) || (action == GLFW_REPEAT))) {
-            auto const current_volume = global_volume.load();
-
-            constexpr std::uint8_t MIN_VOLUME = 0u;
-            if (current_volume > MIN_VOLUME + VOLUME_STEP) {
-                global_volume.fetch_sub(VOLUME_STEP);
-                std::cout << "volume: " << static_cast<int>(current_volume - VOLUME_STEP) << "\n";
-            }
-        }
+        // constexpr std::uint8_t VOLUME_STEP = 2u;
+        // if (key == GLFW_KEY_J && ((action == GLFW_PRESS) || (action == GLFW_REPEAT))) {
+        //     auto const current_volume = global_volume.load();
+        //
+        //     constexpr std::uint8_t MAX_VOLUME = 127u;
+        //     if (current_volume < MAX_VOLUME - VOLUME_STEP) {
+        //         global_volume.fetch_add(VOLUME_STEP);
+        //     }
+        // }
+        // if (key == GLFW_KEY_K && ((action == GLFW_PRESS) || (action == GLFW_REPEAT))) {
+        //     auto const current_volume = global_volume.load();
+        //
+        //     constexpr std::uint8_t MIN_VOLUME = 0u;
+        //     if (current_volume > MIN_VOLUME + VOLUME_STEP) {
+        //         global_volume.fetch_sub(VOLUME_STEP);
+        //     }
+        // }
     }
-
 
     void Window::resize_callback(GLFWwindow* /* window */, int width, int height) {
         glViewport(0, 0, width, height);
+    }
+    /* End Static Callback Methods */
+
+    Window::Window(std::uint32_t width, std::uint32_t height, std::string const& name)
+        : _width{width}, _height{height}, _name{name}, _window{nullptr}, _cam{make_default_camera()}, _rot{1.0f},
+          _curr_rot{1.0f}, _mouse_down{false}, _first_mouse{false}, _last_x{0.0f}, _last_y{0.0f} {
+
+        GLFWwindow* window = glfwCreateWindow(width, height, name.c_str(), NULL, NULL);
+        _window            = GLFWwindow_ptr(window, [](GLFWwindow* window) { glfwDestroyWindow(window); });
+
+
+        if (!window) {
+            std::cout << "Could not create window. Exiting..." << std::endl;
+
+            // TODO : Need to sort out the catch block where this
+            // TODO : gets called
+            // glfwTerminate();
+            throw WindowCreationException();
+        }
+
+        // Useful for getting this info in callbacks
+        glfwSetWindowUserPointer(window, this);
+
+        _configure_viewport();
+        _configure_input_callbacks();
+    }
+
+    void Window::_configure_viewport() {
+        glViewport(0, 0, _width, _height);
+        glfwSetFramebufferSizeCallback(_window.get(), resize_callback);
+        glfwMakeContextCurrent(_window.get());
+    }
+
+    void Window::_configure_input_callbacks() {
+        glfwSetKeyCallback(_window.get(), Window::keys_callback);
+        glfwSetMouseButtonCallback(_window.get(), Window::mouse_button_callback);
+        glfwSetCursorPosCallback(_window.get(), Window::cursor_callback);
+    }
+
+    bool Window::closed() const {
+        return glfwWindowShouldClose(_window.get());
+    }
+
+    Camera Window::camera() const {
+        return _cam;
+    }
+
+    glm::mat4 Window::rotation() const {
+      return _curr_rot;
+    }
+
+    void Window::process_frame() {
+        glfwSwapBuffers(_window.get());
+        glfwPollEvents();
     }
 
 }; // namespace wt

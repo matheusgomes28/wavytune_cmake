@@ -26,12 +26,29 @@ namespace wt {
 
     class Window {
     public:
-        Window(std::uint32_t width, std::uint32_t height, std::string const& name);
-
         static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
         static void cursor_callback(GLFWwindow* window, double xpos, double ypos);
         static void keys_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
         static void resize_callback(GLFWwindow* window, int width, int height);
+
+        Window(std::uint32_t width, std::uint32_t height, std::string const& name);
+
+        /// @brief Processes the frame information. Currently, this function
+        /// will poll events and swap the buffers.
+        void process_frame();
+
+        /// @brief Queries whether the window was closed
+        /// @return true if the window was closed, false otherwise
+        [[nodiscard]] bool closed() const;
+
+
+        /// @biref Gets the current camera state for this window
+        /// @return the Camera object with current view state
+        Camera camera() const;
+
+        /// @brief gets the current rotation matrix
+        /// @return the rotation matrix
+        glm::mat4 rotation() const;
 
 
     private:

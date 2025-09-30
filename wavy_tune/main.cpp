@@ -1,3 +1,4 @@
+#include "cube.hpp"
 #include "window.hpp"
 
 #include <shaders/shader_builder.h>
@@ -108,14 +109,20 @@ namespace {
      * @brief Converts the audio int32 data in source to float32,
      * by normalising all values between
 
- * *
+ *
+
+     * * *
      * [-1.0f, 1.0f].
      * @param destination the destination buffer, must have pre-allcoated
-     * `size *
-     *
+     * `size
+     * *
+
+     * *
 
      * * sizeof(float)` bytes ready to be overriden. 
-     * @param source the source array of values to convert, must
+     * @param source the source array of
+     * values to
+     * convert, must
 
 
      * * * have
@@ -126,8 +133,8 @@ namespace {
 
         // Running buffer to convert values
         constexpr std::size_t buffer_size = 512;
-        const auto int_sample_bytes = ma_get_bytes_per_sample(ma_format_s32);
-        const auto float_sample_bytes = ma_get_bytes_per_sample(ma_format_f32);
+        const auto int_sample_bytes       = ma_get_bytes_per_sample(ma_format_s32);
+        const auto float_sample_bytes     = ma_get_bytes_per_sample(ma_format_f32);
 
         // calculate how many runs of the buffer we need
         std::size_t const whole_buffers = size / buffer_size;
@@ -142,15 +149,13 @@ namespace {
             for (std::size_t j = 0; j < buffer_size; ++j) {
                 buffer[j] = static_cast<ma_int32*>(source)[buffer_offset + j] / 2147483648.0f;
             }
-            memcpy(static_cast<float*>(destination) + buffer_offset, buffer.data(),
-                buffer_size * int_sample_bytes);
+            memcpy(static_cast<float*>(destination) + buffer_offset, buffer.data(), buffer_size * int_sample_bytes);
         }
 
         for (std::size_t j = 0; j < remaining; ++j) {
             buffer[j] = static_cast<ma_int32*>(source)[buffer_offset + j] / 2147483648.0f;
         }
-        memcpy(static_cast<float*>(destination) + buffer_offset, buffer.data(),
-            remaining * float_sample_bytes);
+        memcpy(static_cast<float*>(destination) + buffer_offset, buffer.data(), remaining * float_sample_bytes);
     }
 
     // Works on f32 only!
@@ -184,18 +189,26 @@ namespace {
     /**
      * @brief Read data from the current circular audio buffer into the given
      * data buffer.
+     *
+     *
      * @param
 
      * * buffer the miniaudio circular buffer.
      * @param data the destination for the read data.
-     * @param
+
+
+     * * * @param
      * frames
      * the desired number of frames to read.
-     * @param format the format of the device playback.
+     * @param format the format of the
+     * device
+     * playback.
 
      * * @param
      * channels number of channels.
-     * @return the number of samples actually read into the data
+     * @return the number of samples
+     * actually read
+     * into the data
      * buffer.
      */
     [[nodiscard]] ma_uint32 read_from_buffer(
@@ -226,13 +239,19 @@ namespace {
      * @brief This function will scale the volume down depending on
      * what volume level is passed in.
 
- * *
+ *
+
+     * * *
      * @param device the audio device.
      * @param output the buffer with the output audio data.
-     * @param
+     *
+
+     * * @param
      *
      * frames_read how many frames the output buffer has.
-     * @param vol the volume, must be 0-255.
+     * @param vol the volume, must be
+
+     * * 0-255.
      */
     void multiply_volume(ma_device* device, void* output, ma_uint64 frames_read, std::uint8_t vol) {
         Expects(output != nullptr);
@@ -323,22 +342,10 @@ constexpr size_t size(T (&)[N]) {
 // TODO : YASSS gal, this comment is still valid
 
 // camera state
-static Camera cam;
 static glm::vec3 eye;
 static glm::vec3 pos;
 static glm::vec3 up;
 static glm::mat4 look_at;
-
-// Mouse related events
-static bool mouse_down  = false;
-static bool first_mouse = true;
-static double last_x    = 0.0;
-static double last_y    = 0.0;
-
-// Rotation metrix stuff
-static glm::mat4 rot      = glm::mat4(1.0f);
-static glm::mat4 curr_rot = glm::mat4(1.0f);
-// MARK: end Global configs
 
 
 enum class AXIS { X, Y, Z };
@@ -388,6 +395,7 @@ int main(int argc, char** argv) {
 
     auto const args = parse_program_args(argc, argv);
     if (!args) {
+        std::cout << "could not parse arguments";
         return 0;
     }
 
@@ -457,20 +465,8 @@ int main(int argc, char** argv) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
 
-    auto winddow = wt::Window{800, 600, "Testing Out Stream"};
-    // GLFWwindow* window = glfwCreateWindow(800, 600, "TestingOut Window", NULL, NULL);
-    // if (!window) {
-    //     std::cout << "Could not create window. Exiting..." << std::endl;
-    //     glfwTerminate();
-    //     return -1;
-    // }
+    auto window = wt::Window{800, 600, "Testing Out Stream"};
 
-    // Create the viewport
-    // glViewport(0, 0, 800, 600);
-    // glfwSetFramebufferSizeCallback(window, resizeCallback);
-    // glfwMakeContextCurrent(window);
-    //
-    // Create the shader program
     glewInit(); // Initialise all the openGL macros
 
     // MARK: Creating shader & renderers
@@ -488,53 +484,7 @@ int main(int argc, char** argv) {
 
     ConcreteRenderer renderer{std::move(shader_program)};
 
-    std::vector<glm::vec3> vertices{
-     // Front face
-     {-0.5f, 0.0f, 0.5f}, // Bottom-left
-     {0.5f, 0.0f, 0.5f}, // Bottom-right
-     {0.5f, 1.0f, 0.5f}, // Top-right
-     {-0.5f, 1.0f, 0.5f}, // Top-left
-
-     // Back face
-     {-0.5f, 0.0f, -0.5f}, // Bottom-left
-     {0.5f, 0.0f, -0.5f}, // Bottom-right 5 2 6
-     {0.5f, 1.0f, -0.5f}, // Top-right
-     {-0.5f, 1.0f, -0.5f} // Top-left
-    };
-
-    std::vector<glm::vec3> normals{// Front face
-     {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f},
-
-     // Back face (all normals point in -z direction)
-     {0.0f, 0.0f, -1.0f}, {0.0f, 0.0f, -1.0f}, {0.0f, 0.0f, -1.0f}, {0.0f, 0.0f, -1.0f}};
-
-    std::vector<glm::vec4> colors{// Front face
-     {1.0f, 0.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 0.0f, 1.0f},
-
-     // Back face
-     {1.0f, 0.0f, 1.0f, 1.0f}, {0.0f, 1.0f, 1.0f, 1.0f}, {0.5f, 0.5f, 0.5f, 1.0f}, {1.0f, 0.5f, 0.0f, 1.0f}};
-
-    // Assuming we're looking from the front up
-    std::vector<std::uint32_t> indices{// Front face
-     0, 3, 1, 1, 3, 2,
-     // Back face
-     5, 4, 7, 5, 6, 7,
-     // Top face
-     2, 7, 6, 2, 3, 7,
-     // Bottom Face
-     1, 4, 0, 1, 5, 4,
-     // Left face
-     0, 4, 3, 4, 7, 3,
-     // Right face
-     1, 2, 5, 5, 2, 6};
-
-    DrawBufferBuilder buffer_builder;
-    DrawBuffer buffer = buffer_builder.add_vertices(std::move(vertices))
-                            .add_normals(std::move(normals))
-                            .add_colors(std::move(colors))
-                            .add_indices(std::move(indices))
-                            .build();
-    renderer.queue_data(std::move(buffer));
+    renderer.queue_data(wt::unit_cube());
     renderer.send_gpu_data();
 
     // creating all the offsets
@@ -553,17 +503,6 @@ int main(int argc, char** argv) {
     glm::mat4 proj = glm::perspective<float>(glm::radians(45.0f), 800 / 600.0, 0.01, 100);
     // MARK: End projection maths
 
-    // Callback from commands
-    glfwSetKeyCallback(window, key_cb);
-    glfwSetMouseButtonCallback(window, mouse_button_cb);
-    glfwSetCursorPosCallback(window, cursor_cb);
-
-    cam.pos       = {0, 0, 10};
-    cam.front     = {0, 0, -1};
-    cam.right     = {1, 0, 0};
-    cam.up        = {0, 1, 0};
-    cam.transform = glm::mat4{1};
-
     eye = {0, 0, 5};
     pos = {0, 0, -1};
     up  = {0, 1, 0};
@@ -572,7 +511,7 @@ int main(int argc, char** argv) {
     std::array<std::int32_t, wt::analysis::WINDOW_SIZE> raw_audio{}; // TODO : needs to have double signal size
 
     wt::analysis::FftAnalyzer analyzer;
-    auto const hann_coefficients_input = wt::analysis::make_hann_coefficients<wt::analysis::WINDOW_SIZE>();
+    auto const hann_coefficients_input  = wt::analysis::make_hann_coefficients<wt::analysis::WINDOW_SIZE>();
     auto const hann_coefficients_output = wt::analysis::make_hann_coefficients<wt::analysis::WINDOW_SIZE / 2 + 1>();
     analyzer.set_preprocessor([&](std::array<float, wt::analysis::WINDOW_SIZE>& buffer) {
         // TODO : We want to apply the hann coefficients to the array
@@ -593,20 +532,22 @@ int main(int argc, char** argv) {
 
     std::size_t sample_counter = 0;
     std::array<float, 100> heights{};
-    while (!glfwWindowShouldClose(window)) {
+    while (!window.closed()) {
 
         // TODO : Need to figure out why read_from_buffer is reading
         // TODO : dodgy data from the output into the raw_audio
         // TODO : buffer.
         std::uint32_t samples_to_read = std::max(2u, static_cast<std::uint32_t>(raw_audio.size() - sample_counter)) / 2;
         sample_counter += read_from_buffer(&user_data.buffer, raw_audio.data() + sample_counter, samples_to_read,
-            device.playback.format, device.playback.channels) * device.playback.channels;
+                              device.playback.format, device.playback.channels)
+                        * device.playback.channels;
 
         // TODO : There's an issue where we have left over frames
         sample_counter = sample_counter < raw_audio.size() ? sample_counter : 0;
 
         // lookAt = glm::lookAt(cam.pos, cam.pos + cam.getDirection(), cam.getUp());
-        look_at = glm::lookAt(cam.pos, cam.pos + cam.getDirection(), cam.getUp());
+        auto const cam = window.camera();
+        look_at        = glm::lookAt(cam.pos, cam.pos + cam.getDirection(), cam.getUp());
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -641,11 +582,10 @@ int main(int argc, char** argv) {
         // std::vector<float> heights(100);
         Expects(heights.size() == 100);
         Expects(offsets.size() == 100);
-        renderer.render(proj, look_at, curr_rot, heights, offsets);
+        renderer.render(proj, look_at, window.rotation(), heights, offsets);
 
         glBindVertexArray(0);
-        glfwSwapBuffers(window);
-        glfwPollEvents();
+        window.process_frame();
     }
 
     ma_device_uninit(&device);
