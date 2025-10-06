@@ -69,7 +69,6 @@ namespace wt {
         bool _first_mouse;
         float _last_x;
         float _last_y;
-        
     };
 } // namespace wt
 

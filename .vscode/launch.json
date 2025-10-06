@@ -1,0 +1,25 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "AudioVisualizer",
+      "type": "codelldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/unix-deb-ninja/wavy_tune/wavy_tune",
+      "args": [
+        "--audio-file",
+        "brazil_anthem.wav",
+        "--vertex-shader",
+        "shaders/vs.glsl",
+        "--frag-shader",
+        "shaders/fs.glsl"
+      ],
+      "stopOnEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false,
+      "preLaunchTask": ""
+    }
+  ]
+}
+

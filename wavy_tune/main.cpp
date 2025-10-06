@@ -108,23 +108,16 @@ namespace {
     /**
      * @brief Converts the audio int32 data in source to float32,
      * by normalising all values between
-
- *
-
      * * *
      * [-1.0f, 1.0f].
      * @param destination the destination buffer, must have pre-allcoated
      * `size
      * *
-
      * *
-
      * * sizeof(float)` bytes ready to be overriden. 
      * @param source the source array of
      * values to
      * convert, must
-
-
      * * * have
      * `size * sizeof(int32)` bytes to be read from.
      */
@@ -348,39 +341,39 @@ static glm::vec3 up;
 static glm::mat4 look_at;
 
 
-enum class AXIS { X, Y, Z };
-glm::vec3 rotateVector(const glm::vec3& vector, const glm::vec3& from, const AXIS& axis, const float& angle) {
-    const glm::vec3 INV_VECTOR{-from.x, -from.y, -from.z};
-
-    switch (axis) {
-    case AXIS::X:
-        {
-            const glm::vec3 ROT_AXIS{1, 0, 0};
-            const glm::mat4& ROT_MATRIX = glm::rotate(angle, ROT_AXIS);
-            glm::vec3 retVal =
-                ROT_MATRIX * glm::vec4{vector.x + INV_VECTOR.x, vector.y + INV_VECTOR.y, vector.z + INV_VECTOR.z, 1};
-
-            return retVal - INV_VECTOR;
-        }
-    case AXIS::Y:
-        {
-            const glm::vec3 ROT_AXIS{0, 1, 0};
-            const glm::mat4& ROT_MATRIX = glm::rotate(angle, ROT_AXIS);
-            glm::vec3 retVal =
-                ROT_MATRIX * glm::vec4{vector.x + INV_VECTOR.x, vector.y + INV_VECTOR.y, vector.z + INV_VECTOR.z, 1};
-            return retVal - INV_VECTOR;
-        }
-    case AXIS::Z:
-        {
-            const glm::vec3 ROT_AXIS{0, 0, 1};
-            const glm::mat4& ROT_MATRIX = glm::rotate(angle, ROT_AXIS);
-            glm::vec3 retVal =
-                ROT_MATRIX * glm::vec4{vector.x + INV_VECTOR.x, vector.y + INV_VECTOR.y, vector.z + INV_VECTOR.z, 1};
-            return retVal - INV_VECTOR;
-        }
-    }
-}
-
+// enum class AXIS { X, Y, Z };
+// glm::vec3 rotateVector(const glm::vec3& vector, const glm::vec3& from, const AXIS& axis, const float& angle) {
+//     const glm::vec3 INV_VECTOR{-from.x, -from.y, -from.z};
+//
+//     switch (axis) {
+//     case AXIS::X:
+//         {
+//             const glm::vec3 ROT_AXIS{1, 0, 0};
+//             const glm::mat4& ROT_MATRIX = glm::rotate(angle, ROT_AXIS);
+//             glm::vec3 retVal =
+//                 ROT_MATRIX * glm::vec4{vector.x + INV_VECTOR.x, vector.y + INV_VECTOR.y, vector.z + INV_VECTOR.z, 1};
+//
+//             return retVal - INV_VECTOR;
+//         }
+//     case AXIS::Y:
+//         {
+//             const glm::vec3 ROT_AXIS{0, 1, 0};
+//             const glm::mat4& ROT_MATRIX = glm::rotate(angle, ROT_AXIS);
+//             glm::vec3 retVal =
+//                 ROT_MATRIX * glm::vec4{vector.x + INV_VECTOR.x, vector.y + INV_VECTOR.y, vector.z + INV_VECTOR.z, 1};
+//             return retVal - INV_VECTOR;
+//         }
+//     case AXIS::Z:
+//         {
+//             const glm::vec3 ROT_AXIS{0, 0, 1};
+//             const glm::mat4& ROT_MATRIX = glm::rotate(angle, ROT_AXIS);
+//             glm::vec3 retVal =
+//                 ROT_MATRIX * glm::vec4{vector.x + INV_VECTOR.x, vector.y + INV_VECTOR.y, vector.z + INV_VECTOR.z, 1};
+//             return retVal - INV_VECTOR;
+//         }
+//     }
+// }
+//
 // MARK: Event callbacks (mouse, key)
 
 // MARK: End Event callbacks (mouse, key)
@@ -582,9 +575,10 @@ int main(int argc, char** argv) {
         // std::vector<float> heights(100);
         Expects(heights.size() == 100);
         Expects(offsets.size() == 100);
-        renderer.render(proj, look_at, window.rotation(), heights, offsets);
 
+        renderer.render(proj, look_at, window.rotation(), heights, offsets);
         glBindVertexArray(0);
+
         window.process_frame();
     }
 

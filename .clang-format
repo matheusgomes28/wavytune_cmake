@@ -139,7 +139,7 @@ BreakBeforeBinaryOperators: NonAssignment
 # BreakBeforeBraces: Attach
 # BreakBeforeInlineASMColon: OnlyMultiline
 # BreakBeforeTernaryOperators: true
-# BreakConstructorInitializers: BeforeColon
+BreakConstructorInitializers: BeforeColon
 # BreakFunctionDefinitionParameters: false
 # BreakInheritanceList: BeforeColon
 # BreakStringLiterals: true
@@ -246,7 +246,7 @@ NamespaceIndentation: All
 # ObjCBreakBeforeNestedBlockParam: true
 # ObjCSpaceAfterProperty: false
 # ObjCSpaceBeforeProtocolList: true
-# PackConstructorInitializers: BinPack
+PackConstructorInitializers: NextLineOnly
 # PenaltyBreakAssignment: 2
 # PenaltyBreakBeforeFirstCallParameter: 19
 # PenaltyBreakComment: 300

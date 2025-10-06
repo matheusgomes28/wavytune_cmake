@@ -3,7 +3,12 @@ find_package(cxxopts REQUIRED)
 find_package(kissfft REQUIRED)
 find_package(miniaudio REQUIRED)
 
-add_executable(wavy_tune main.cpp window.cpp)
+add_executable(wavy_tune)
+
+target_sources(wavy_tune PRIVATE
+  audio.cpp
+  main.cpp
+  window.cpp)
 
 target_link_libraries(wavy_tune
  PRIVATE
