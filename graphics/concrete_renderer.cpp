@@ -342,7 +342,6 @@ void ConcreteRenderer::render(const glm::mat4& proj, const glm::mat4& view, glm:
     shader_program_->set_uniform("proj", proj);
     shader_program_->set_uniform("view", view);
     shader_program_->set_uniform("rotate", rot);
-
     shader_program_->set_uniform("heights", {heights});
     shader_program_->set_uniform("offsets", {offsets});
 

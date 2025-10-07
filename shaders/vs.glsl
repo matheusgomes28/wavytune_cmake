@@ -15,8 +15,6 @@ uniform mat4 rotate;
 uniform vec3 offsets[100];
 uniform float heights[100];
 
-uniform float height[];
-
 void main()
 {
     vec3 offset = offsets[gl_InstanceID];

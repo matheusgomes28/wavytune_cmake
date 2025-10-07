@@ -2,18 +2,19 @@ from conan import ConanFile
 
 
 class WavyTuneConan(ConanFile):
-	settings = ("os", "compiler", "build_type", "arch")
-	generators = "CMakeDeps", "CMakeToolchain"
+    settings = ("os", "compiler", "build_type", "arch")
+    generators = "CMakeDeps", "CMakeToolchain"
 
-	def requirements(self):
-		self.requires("cxxopts/3.2.0"),
-		self.requires("glew/2.2.0"),
-		self.requires("glfw/3.4"),
-		self.requires("glm/1.0.1"),
-		self.requires("gtest/1.16.0"),
-		self.requires("kissfft/131.1.0"),
-		self.requires("miniaudio/0.11.21"),
-		self.requires("ms-gsl/4.1.0"),
+    def requirements(self):
+        self.requires("cxxopts/3.2.0")
+        self.requires("glew/2.2.0")
+        self.requires("glfw/3.4")
+        self.requires("glm/1.0.1")
+        self.requires("gtest/1.16.0")
+        self.requires("kissfft/131.1.0")
+        self.requires("miniaudio/0.11.21")
+        self.requires("ms-gsl/4.1.0")
+        self.requires("spdlog/1.15.3")
 
 	# def imports(self):
 	# 	self.copy("*.dll", dst="bin", src="bin")

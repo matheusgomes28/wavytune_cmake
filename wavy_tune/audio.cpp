@@ -11,9 +11,13 @@ extern "C" {
 namespace {
 
     wt::AudioUserData make_default_user_data(wt::AudioPlayer* parent_instance) {
-        return wt::AudioUserData{.decoder = wt::DecoderPtr(new ma_decoder, [](auto* ptr) { ma_decoder_uninit(ptr); }),
-         .buffer                          = wt::RingBufferPtr(new ma_pcm_rb, [](auto* ptr) { ma_pcm_rb_uninit(ptr); }),
-         .instance                        = parent_instance};
+        // clang-format off
+        return wt::AudioUserData{
+          .decoder  = wt::DecoderPtr(new ma_decoder, [](auto* ptr) { ma_decoder_uninit(ptr); }),
+          .buffer   = wt::RingBufferPtr(new ma_pcm_rb, [](auto* ptr) { ma_pcm_rb_uninit(ptr); }),
+          .instance = parent_instance
+        };
+        // clang-format on
     }
 
     wt::DevicePtr make_default_device() {
@@ -29,20 +33,14 @@ namespace {
         return wt::DeviceConfigPtr{device_config_ptr, [](ma_device_config* ptr) { delete ptr; }};
     }
 
-    /*
-     * * *
-     * @param device the audio device.
-     * @param output the buffer with the output audio
-     * data.
-
-
-
-
-
-     * * * * * @param n_frames how many frames the output buffer has.
-     * @param vol the volume,
-     * must be 0-255.
- */
+    /**
+     * Multiplies the outpub audio samples by the volume.
+     *
+     * @param device the device
+     * @param output the output buffer pointer
+     * @param n_frames the number of frames
+     * @param vol the volume
+     */
     void multiply_volume(ma_device* device, void* output, ma_uint64 n_frames, std::uint8_t vol) {
         Expects(output != nullptr);
         Expects(device != nullptr);
@@ -69,25 +67,6 @@ namespace {
         }
     }
 
-    /**
-     * @brief Converts the audio int32 data in source to float32,
-     * by normalising all values between
-     * [-1.0f, 1.0f].
-     * @param destination the destination buffer, must have pre-allcoated
-     * * `size
-     * * sizeof(float)` bytes ready to be overriden. 
-     * @param source
-     * the
-     * source
-     * array of
-     * * values to
-     * convert, must
-     * * * have
-     * `size *
-     * sizeof(int32)`
-     * bytes to be read
-     * from.
-     */
     void s32_to_f32(void* destination, void* source, std::size_t size) {
         static_assert(sizeof(ma_float) == sizeof(ma_int32));
 
@@ -169,7 +148,8 @@ namespace wt {
 
 
         Expects(device->playback.format == ma_format_f32);
-        write_to_buffer(user_data->buffer.get(), output, frames_read, device->playback.format, device->playback.channels);
+        write_to_buffer(
+            user_data->buffer.get(), output, frames_read, device->playback.format, device->playback.channels);
         (void) input;
     }
     /* End Static Methods */
@@ -193,13 +173,35 @@ namespace wt {
             return false;
         }
 
-        _device_config->playback.format = _user_data.decoder->outputFormat;
-        // deviceConfig.playback.format   = ma_format_f32;
+        _device_config->playback.format   = _user_data.decoder->outputFormat;
         _device_config->playback.channels = _user_data.decoder->outputChannels;
         _device_config->sampleRate        = _user_data.decoder->outputSampleRate;
         _device_config->dataCallback      = data_callback;
         _device_config->pUserData         = &_user_data;
 
+        // TODO : We probably wanna make sure we only do these things
+        // TODO : once, even if we play a different file
+        result = ma_pcm_rb_init(_device_config->playback.format, _device_config->playback.channels, 1024, nullptr,
+            nullptr, _user_data.buffer.get());
+        if (result != MA_SUCCESS) {
+            fmt::println(": {:s}", _current_file);
+            return false;
+        }
+
+        if (ma_device_init(NULL, _device_config.get(), _device.get()) != MA_SUCCESS) {
+            fmt::println("failed to open playback device");
+            ma_decoder_uninit(_user_data.decoder.get());
+            ma_pcm_rb_uninit(_user_data.buffer.get());
+            return false;
+        }
+
+        if (ma_device_start(_device.get()) != MA_SUCCESS) {
+            fmt::println("failed to start playback device");
+            ma_device_uninit(_device.get());
+            ma_decoder_uninit(_user_data.decoder.get());
+            ma_pcm_rb_uninit(_user_data.buffer.get());
+            return false;
+        }
         return true;
     }
 

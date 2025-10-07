@@ -1,3 +1,4 @@
+#include "audio.hpp"
 #include "cube.hpp"
 #include "window.hpp"
 
@@ -21,11 +22,6 @@
 #include <cxxopts.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
-
-#define MINIAUDIO_IMPLEMENTATION
-extern "C" {
-#include <miniaudio.h>
-}
 
 
 // #include "GLAbstractions/vao.h"
@@ -53,11 +49,6 @@ extern "C" {
 namespace {
 
     static std::atomic_uint8_t global_volume = 50;
-
-    struct AudioData {
-        ma_decoder decoder;
-        ma_pcm_rb buffer;
-    };
 
     struct ProgramArgs {
         std::string vs_path;
@@ -105,128 +96,29 @@ namespace {
         return args;
     }
 
-    /**
-     * @brief Converts the audio int32 data in source to float32,
-     * by normalising all values between
-     * * *
-     * [-1.0f, 1.0f].
-     * @param destination the destination buffer, must have pre-allcoated
-     * `size
-     * *
-     * *
-     * * sizeof(float)` bytes ready to be overriden. 
-     * @param source the source array of
-     * values to
-     * convert, must
-     * * * have
-     * `size * sizeof(int32)` bytes to be read from.
-     */
-    void s32_to_f32(void* destination, void* source, std::size_t size) {
-        static_assert(sizeof(ma_float) == sizeof(ma_int32));
-
-        // Running buffer to convert values
-        constexpr std::size_t buffer_size = 512;
-        const auto int_sample_bytes       = ma_get_bytes_per_sample(ma_format_s32);
-        const auto float_sample_bytes     = ma_get_bytes_per_sample(ma_format_f32);
-
-        // calculate how many runs of the buffer we need
-        std::size_t const whole_buffers = size / buffer_size;
-        std::size_t const remaining     = size - (whole_buffers * buffer_size);
-        Expects(remaining < buffer_size);
-
-        std::array<float, buffer_size> buffer{};
-        std::size_t buffer_offset = 0;
-        for (std::size_t i = 0; i < whole_buffers; ++i, buffer_offset += buffer_size) {
-
-            // convert each one of them
-            for (std::size_t j = 0; j < buffer_size; ++j) {
-                buffer[j] = static_cast<ma_int32*>(source)[buffer_offset + j] / 2147483648.0f;
-            }
-            memcpy(static_cast<float*>(destination) + buffer_offset, buffer.data(), buffer_size * int_sample_bytes);
-        }
-
-        for (std::size_t j = 0; j < remaining; ++j) {
-            buffer[j] = static_cast<ma_int32*>(source)[buffer_offset + j] / 2147483648.0f;
-        }
-        memcpy(static_cast<float*>(destination) + buffer_offset, buffer.data(), remaining * float_sample_bytes);
-    }
-
-    // Works on f32 only!
-    bool write_to_buffer(ma_pcm_rb* buffer, void* data, ma_uint32 frames, ma_format format, std::size_t channels) {
-
-        void* destination    = nullptr;
-        ma_uint32 write_size = frames;
-
-        ma_result const result = ma_pcm_rb_acquire_write(buffer, &write_size, &destination);
-        if (result != MA_SUCCESS) {
-            return false;
-        }
-
-        if (write_size == 0) {
-            // Should be something else;
-            return true;
-        }
-
-        // Conversion may be needed!
-        ma_uint32 const written_size = std::min(frames, write_size);
-        if (format == ma_format_f32) {
-            memcpy(destination, data, written_size * ma_get_bytes_per_sample(format) * channels);
-        } else if (format == ma_format_s32) {
-            // TODO : This takes the size in frames, not bytes
-            s32_to_f32(destination, data, written_size * channels);
-        }
-
-        return ma_pcm_rb_commit_write(buffer, written_size) == MA_SUCCESS;
-    }
-
-    /**
-     * @brief Read data from the current circular audio buffer into the given
-     * data buffer.
-     *
-     *
-     * @param
-
-     * * buffer the miniaudio circular buffer.
-     * @param data the destination for the read data.
-
-
-     * * * @param
-     * frames
-     * the desired number of frames to read.
-     * @param format the format of the
-     * device
-     * playback.
-
-     * * @param
-     * channels number of channels.
-     * @return the number of samples
-     * actually read
-     * into the data
-     * buffer.
-     */
-    [[nodiscard]] ma_uint32 read_from_buffer(
-        ma_pcm_rb* buffer, void* data, ma_uint32 frames, ma_format format, std::size_t channels) {
-
-        void* source        = nullptr;
-        ma_uint32 read_size = frames;
-        ma_result result    = ma_pcm_rb_acquire_read(buffer, &read_size, &source);
-
-        if (result != MA_SUCCESS) {
-            return 0;
-        }
-
-        if (read_size == 0) {
-            // TODO : Should probably return something else
-            return 0;
-        }
-
-        ma_uint32 actually_read = std::min(read_size, frames);
-        memcpy(data, source, actually_read * ma_get_bytes_per_sample(format) * channels);
-
-        result = ma_pcm_rb_commit_read(buffer, actually_read);
-        Expects((result == MA_SUCCESS) || (result == MA_AT_END));
-        return actually_read;
-    }
+    // [[nodiscard]] ma_uint32 read_from_buffer(
+    //     ma_pcm_rb* buffer, void* data, ma_uint32 frames, ma_format format, std::size_t channels) {
+    //
+    //     void* source        = nullptr;
+    //     ma_uint32 read_size = frames;
+    //     ma_result result    = ma_pcm_rb_acquire_read(buffer, &read_size, &source);
+    //
+    //     if (result != MA_SUCCESS) {
+    //         return 0;
+    //     }
+    //
+    //     if (read_size == 0) {
+    //         // TODO : Should probably return something else
+    //         return 0;
+    //     }
+    //
+    //     ma_uint32 actually_read = std::min(read_size, frames);
+    //     memcpy(data, source, actually_read * ma_get_bytes_per_sample(format) * channels);
+    //
+    //     result = ma_pcm_rb_commit_read(buffer, actually_read);
+    //     Expects((result == MA_SUCCESS) || (result == MA_AT_END));
+    //     return actually_read;
+    // }
 
     /**
      * @brief This function will scale the volume down depending on
@@ -246,49 +138,6 @@ namespace {
 
      * * 0-255.
      */
-    void multiply_volume(ma_device* device, void* output, ma_uint64 frames_read, std::uint8_t vol) {
-        Expects(output != nullptr);
-        Expects(device != nullptr);
-        Expects(frames_read > 0);
-
-        // TODO : Go through "frames_read" frames * channel count in "pOutput"
-        float constexpr max_volume = 127.0f;
-        float const volume_level   = vol / max_volume;
-
-        // TODO : Change volume by scaling down the values in output (might be int, or float)
-        auto const format = device->playback.format;
-        if (format == ma_format_s32) { // signed 32-bit ints
-            std::int32_t* buffer = static_cast<std::int32_t*>(output);
-            for (ma_uint64 i = 0; i < frames_read * device->playback.channels; ++i) {
-                const std::int32_t sample = buffer[i];
-                // const std::int32_t modified_sample = static_cast<std::int32_t>(volume_level * sample);
-                buffer[i] = static_cast<std::int32_t>(volume_level * sample);
-            }
-        } else if (format == ma_format_f32) { // signed 32-bit floats
-            float* buffer = static_cast<float*>(output);
-            for (ma_uint64 i = 0; i < frames_read; ++i) {
-                buffer[i] *= volume_level;
-            }
-        }
-    }
-
-    void data_callback(ma_device* device, void* output, const void* input, ma_uint32 frame_count) {
-        AudioData* user_data = (AudioData*) device->pUserData;
-        if (user_data == NULL) {
-            return;
-        }
-
-        ma_uint64 frames_read = 0;
-        ma_decoder_read_pcm_frames(&user_data->decoder, output, frame_count, &frames_read);
-
-        std::uint8_t const volume = global_volume.load();
-        multiply_volume(device, output, frames_read, volume);
-
-
-        // figure out whether we need a new buffer for
-        write_to_buffer(&user_data->buffer, output, frames_read, device->playback.format, device->playback.channels);
-        (void) input;
-    }
 
     // TODO : This may ignore items in the end if the input size,
     // TODO : isn't divible exactly by output size
@@ -392,56 +241,8 @@ int main(int argc, char** argv) {
         return 0;
     }
 
-    // MARK: Begin of audio
-    ma_result result;
-    ma_device_config deviceConfig;
-    ma_device device;
-    AudioData user_data{};
-
-    if (argc < 2) {
-        printf("No input file.\n");
-        return -1;
-    }
-
-
-    result = ma_decoder_init_file(args->audio_path.c_str(), NULL, &user_data.decoder);
-    if (result != MA_SUCCESS) {
-        printf("Could not load file: %s\n", argv[1]);
-        return -2;
-    }
-
-    deviceConfig                 = ma_device_config_init(ma_device_type_playback);
-    deviceConfig.playback.format = user_data.decoder.outputFormat;
-    // deviceConfig.playback.format   = ma_format_f32;
-    deviceConfig.playback.channels = user_data.decoder.outputChannels;
-    deviceConfig.sampleRate        = user_data.decoder.outputSampleRate;
-    deviceConfig.dataCallback      = data_callback;
-    deviceConfig.pUserData         = &user_data;
-
-    result = ma_pcm_rb_init(
-        deviceConfig.playback.format, deviceConfig.playback.channels, 1024, nullptr, nullptr, &user_data.buffer);
-
-    if (result != MA_SUCCESS) {
-        printf("Could not create buffer");
-        return -2;
-    }
-
-    if (ma_device_init(NULL, &deviceConfig, &device) != MA_SUCCESS) {
-        printf("Failed to open playback device.\n");
-        ma_decoder_uninit(&user_data.decoder);
-        ma_pcm_rb_uninit(&user_data.buffer);
-        return -3;
-    }
-
-    if (ma_device_start(&device) != MA_SUCCESS) {
-        printf("Failed to start playback device.\n");
-        ma_device_uninit(&device);
-        ma_decoder_uninit(&user_data.decoder);
-        ma_pcm_rb_uninit(&user_data.buffer);
-        return -4;
-    }
-
-    // MARK: End of audio
+    wt::AudioPlayer player;
+    player.play(args->audio_path);
 
     // Testing the fourier shit
     std::function<double(const std::complex<double>&)> applier = [](const std::complex<double>& v) -> double {
@@ -524,16 +325,16 @@ int main(int argc, char** argv) {
     glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
 
     std::size_t sample_counter = 0;
-    std::array<float, 100> heights{};
+    std::array<float, 100> heights;
     while (!window.closed()) {
 
         // TODO : Need to figure out why read_from_buffer is reading
         // TODO : dodgy data from the output into the raw_audio
         // TODO : buffer.
-        std::uint32_t samples_to_read = std::max(2u, static_cast<std::uint32_t>(raw_audio.size() - sample_counter)) / 2;
-        sample_counter += read_from_buffer(&user_data.buffer, raw_audio.data() + sample_counter, samples_to_read,
-                              device.playback.format, device.playback.channels)
-                        * device.playback.channels;
+        // std::uint32_t samples_to_read = std::max(2u, static_cast<std::uint32_t>(raw_audio.size() - sample_counter)) / 2;
+        // sample_counter += read_from_buffer(&user_data.buffer, raw_audio.data() + sample_counter, samples_to_read,
+        //                       device.playback.format, device.playback.channels)
+        //                 * device.playback.channels;
 
         // TODO : There's an issue where we have left over frames
         sample_counter = sample_counter < raw_audio.size() ? sample_counter : 0;
@@ -553,21 +354,24 @@ int main(int argc, char** argv) {
         // auto const transform_complex = analyzer.analyze(wt::test::sin_10);
         if (sample_counter == 0) {
             // convert integer to floats for analysis
-            std::array<float, wt::analysis::WINDOW_SIZE> audio_floats;
-            s32_to_f32(audio_floats.data(), raw_audio.data(), raw_audio.size());
+            // std::array<float, wt::analysis::WINDOW_SIZE> audio_floats;
+            // s32_to_f32(audio_floats.data(), raw_audio.data(), raw_audio.size());
 
-            auto const transform_complex = analyzer.analyze(audio_floats);
-            std::array<float, wt::analysis::WINDOW_SIZE / 2 + 1> transform{};
-
-            std::transform(begin(transform_complex), end(transform_complex), begin(transform),
-                [](std::complex<float> in) { return std::abs(in); });
-
-            // Remove the energy at (0)
-            for (int i = 0; i < transform.size(); i++) {
-                transform[i] *= hann_coefficients_output[i];
+            // auto const transform_complex = analyzer.analyze(audio_floats);
+            // std::array<float, wt::analysis::WINDOW_SIZE / 2 + 1> transform{};
+            //
+            // std::transform(begin(transform_complex), end(transform_complex), begin(transform),
+            //     [](std::complex<float> in) { return std::abs(in); });
+            //
+            // // Remove the energy at (0)
+            // for (int i = 0; i < transform.size(); i++) {
+            //     transform[i] *= hann_coefficients_output[i];
+            // }
+            // heights = bin_pack<100>(transform);
+            // heights = normalize(heights, 10.0f);
+            for (int i = 0; i < 100; ++i) {
+              heights[i] = 1.0f;
             }
-            heights = bin_pack<100>(transform);
-            heights = normalize(heights, 10.0f);
         }
         // MARK: Sound analysis
 
@@ -582,8 +386,5 @@ int main(int argc, char** argv) {
         window.process_frame();
     }
 
-    ma_device_uninit(&device);
-    ma_decoder_uninit(&user_data.decoder);
-    ma_pcm_rb_uninit(&user_data.buffer);
     return 0;
 }
