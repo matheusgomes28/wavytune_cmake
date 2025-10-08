@@ -8,6 +8,11 @@ extern "C" {
 #include <miniaudio.h>
 }
 
+#include <array>
+#include <cstdint>
+#include <limits>
+#include <string>
+
 namespace {
 
     wt::AudioUserData make_default_user_data(wt::AudioPlayer* parent_instance) {
@@ -97,6 +102,35 @@ namespace {
         memcpy(static_cast<float*>(destination) + buffer_offset, buffer.data(), remaining * float_sample_bytes);
     }
 
+    void s16_to_f32(void* destination, void* source, std::size_t size) {
+        // Running buffer to convert values
+        constexpr std::size_t BUFFER_SIZE = 512;
+        constexpr float MAX_VALUE         = std::numeric_limits<std::int16_t>::max();
+        const auto in_sample_bytes        = ma_get_bytes_per_sample(ma_format_s16);
+        const auto out_float_bytes        = ma_get_bytes_per_sample(ma_format_f32);
+
+        // calculate how many runs of the buffer we need
+        std::size_t const whole_buffers = size / BUFFER_SIZE;
+        std::size_t const remaining     = size - (whole_buffers * BUFFER_SIZE);
+        Expects(remaining < BUFFER_SIZE);
+
+        std::array<float, BUFFER_SIZE> buffer{};
+        std::size_t buffer_offset = 0;
+        for (std::size_t i = 0; i < whole_buffers; ++i, buffer_offset += BUFFER_SIZE) {
+
+            // convert each one of them
+            for (std::size_t j = 0; j < BUFFER_SIZE; ++j) {
+                buffer[j] = static_cast<ma_int16*>(source)[buffer_offset + j] / MAX_VALUE;
+            }
+            memcpy(static_cast<float*>(destination) + buffer_offset, buffer.data(), BUFFER_SIZE * in_sample_bytes);
+        }
+
+        for (std::size_t j = 0; j < remaining; ++j) {
+            buffer[j] = static_cast<ma_int16*>(source)[buffer_offset + j] / MAX_VALUE;
+        }
+        memcpy(static_cast<float*>(destination) + buffer_offset, buffer.data(), remaining * out_float_bytes);
+    }
+
 
     // Works on f32 only!
     bool write_to_buffer(ma_pcm_rb* buffer, void* data, ma_uint32 frames, ma_format format, std::size_t channels) {
@@ -114,13 +148,15 @@ namespace {
             return true;
         }
 
-        // Conversion may be needed!
         ma_uint32 const written_size = std::min(frames, write_size);
-        if (format == ma_format_f32) {
-            memcpy(destination, data, written_size * ma_get_bytes_per_sample(format) * channels);
-        } else if (format == ma_format_s32) {
-            // TODO : This takes the size in frames, not bytes
+
+        switch (format) {
+        case ma_format_s32:
             s32_to_f32(destination, data, written_size * channels);
+            break;
+        case ma_format_s16:
+            s16_to_f32(destination, data, written_size * channels);
+            break;
         }
 
         return ma_pcm_rb_commit_write(buffer, written_size) == MA_SUCCESS;
@@ -130,7 +166,7 @@ namespace {
 namespace wt {
 
     /* Static Methods */
-    void AudioPlayer::data_callback(ma_device* device, void* output, const void* input, ma_uint32 frame_count) {
+    void AudioPlayer::data_callback(ma_device* device, void* output, const void* /* input */, ma_uint32 frame_count) {
         wt::AudioUserData* user_data = (wt::AudioUserData*) device->pUserData;
         Expects(user_data->decoder);
         Expects(user_data->buffer);
@@ -146,11 +182,8 @@ namespace wt {
         std::uint8_t const volume = user_data->instance->_volume.load();
         multiply_volume(device, output, frames_read, volume);
 
-
-        Expects(device->playback.format == ma_format_f32);
         write_to_buffer(
             user_data->buffer.get(), output, frames_read, device->playback.format, device->playback.channels);
-        (void) input;
     }
     /* End Static Methods */
 
@@ -165,6 +198,8 @@ namespace wt {
         Expects(_device);
         Expects(_device_config);
         Expects(_user_data.decoder);
+
+        _current_file = file_name;
 
         ma_result result = MA_SUCCESS;
         result           = ma_decoder_init_file(_current_file.c_str(), NULL, _user_data.decoder.get());

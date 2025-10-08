@@ -24,9 +24,6 @@
 #include <glm/gtx/transform.hpp>
 
 
-// #include "GLAbstractions/vao.h"
-// #include "GLAbstractions/vbo.h"
-// #include "GLAbstractions/vertex_attribute.h"
 #include <algorithm>
 #include <atomic>
 #include <cmath>
@@ -35,16 +32,7 @@
 #include <iostream>
 #include <optional>
 #include <ranges>
-// #include <mutex>
 
-// #include "graphics/draw_buffer.h"
-// #include "graphics/draw_data2.h"
-// #include "graphics/draw_data3.h"
-// #include "graphics/entity.h"
-// #include "Renderer/concrete_renderer.h"
-// #include "render_builder.h"
-
-// #include "DataStructures/byte_array.h"
 
 namespace {
 
@@ -96,48 +84,6 @@ namespace {
         return args;
     }
 
-    // [[nodiscard]] ma_uint32 read_from_buffer(
-    //     ma_pcm_rb* buffer, void* data, ma_uint32 frames, ma_format format, std::size_t channels) {
-    //
-    //     void* source        = nullptr;
-    //     ma_uint32 read_size = frames;
-    //     ma_result result    = ma_pcm_rb_acquire_read(buffer, &read_size, &source);
-    //
-    //     if (result != MA_SUCCESS) {
-    //         return 0;
-    //     }
-    //
-    //     if (read_size == 0) {
-    //         // TODO : Should probably return something else
-    //         return 0;
-    //     }
-    //
-    //     ma_uint32 actually_read = std::min(read_size, frames);
-    //     memcpy(data, source, actually_read * ma_get_bytes_per_sample(format) * channels);
-    //
-    //     result = ma_pcm_rb_commit_read(buffer, actually_read);
-    //     Expects((result == MA_SUCCESS) || (result == MA_AT_END));
-    //     return actually_read;
-    // }
-
-    /**
-     * @brief This function will scale the volume down depending on
-     * what volume level is passed in.
-
- *
-
-     * * *
-     * @param device the audio device.
-     * @param output the buffer with the output audio data.
-     *
-
-     * * @param
-     *
-     * frames_read how many frames the output buffer has.
-     * @param vol the volume, must be
-
-     * * 0-255.
-     */
 
     // TODO : This may ignore items in the end if the input size,
     // TODO : isn't divible exactly by output size
