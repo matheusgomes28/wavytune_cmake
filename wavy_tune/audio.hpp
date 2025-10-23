@@ -32,6 +32,7 @@ namespace wt {
         DecoderPtr decoder;
         RingBufferPtr buffer;
         AudioPlayer* instance;
+        std::atomic_bool is_playing;
     };
 
     class AudioPlayer {
@@ -41,8 +42,9 @@ namespace wt {
 
         AudioPlayer();
         bool play(std::string const& audio_file);
+        void pause();
+        void unpause();
 
-        // std::array<WINDOW_SIZE> current_samples() const;
     private:
         AudioUserData _user_data;
         DevicePtr _device;

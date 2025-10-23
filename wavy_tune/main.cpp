@@ -10,8 +10,6 @@
 #include <graphics/concrete_renderer.hpp>
 #include <graphics/draw_buffer.hpp>
 
-// #include "test.hpp"
-
 
 // More testing for why things arent working
 #define GLM_ENABLE_EXPERIMENTAL
@@ -26,6 +24,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <chrono>
 #include <cmath>
 #include <complex>
 #include <cstring>
@@ -272,6 +271,10 @@ int main(int argc, char** argv) {
 
     std::size_t sample_counter = 0;
     std::array<float, 100> heights;
+
+    auto last = std::chrono::system_clock::now();
+    bool play = true;
+
     while (!window.closed()) {
 
         // TODO : Need to figure out why read_from_buffer is reading
@@ -316,11 +319,24 @@ int main(int argc, char** argv) {
             // heights = bin_pack<100>(transform);
             // heights = normalize(heights, 10.0f);
             for (int i = 0; i < 100; ++i) {
-              heights[i] = 1.0f;
+                heights[i] = 1.0f;
             }
         }
-        // MARK: Sound analysis
 
+        // MARK: Sound analysis
+        auto const now = std::chrono::system_clock::now();
+
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last).count() >= 5000) {
+            auto const now_secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch());
+            if (play) {
+                player.pause();
+                play = false;
+            } else {
+                player.unpause();
+                play = true;
+            }
+            last = now;
+        }
 
         // std::vector<float> heights(100);
         Expects(heights.size() == 100);

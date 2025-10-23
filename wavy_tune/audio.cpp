@@ -1,7 +1,9 @@
 #include "audio.hpp"
 
+#include <cstring>
 #include <fmt/format.h>
 #include <gsl/assert>
+#include <spdlog/spdlog.h>
 
 #define MINIAUDIO_IMPLEMENTATION
 extern "C" {
@@ -176,6 +178,32 @@ namespace wt {
             return;
         }
 
+        if (!user_data->is_playing) {
+            // Need to zero out out buffer
+            auto const buffer_size = device->playback.channels * frame_count;
+            memset(output, 0, frame_count * ma_get_bytes_per_frame(device->playback.format, device->playback.channels));
+            // switch (device->playback.format) {
+            // case ma_format_u8:
+            //     memset(output, 0, buffer_size);
+            //     break;
+            // case ma_format_s16:
+            //     memset(output, 0, buffer_size * 2);
+            //     break;
+            // case ma_format_s24:
+            //     memset(output, 0, buffer_size * 3);
+            //     break;
+            // case ma_format_s32:
+            //     memset(output, 0, buffer_size * 4);
+            //     break;
+            // case ma_format_f32:
+            //     memset(output, 0, buffer_size * 4);
+            //     break;
+            // default:
+            //     break;
+            // }
+            return;
+        }
+
         ma_uint64 frames_read = 0;
         ma_decoder_read_pcm_frames(user_data->decoder.get(), output, frame_count, &frames_read);
 
@@ -216,8 +244,8 @@ namespace wt {
 
         // TODO : We probably wanna make sure we only do these things
         // TODO : once, even if we play a different file
-        result = ma_pcm_rb_init(_device_config->playback.format, _device_config->playback.channels, 1024, nullptr,
-            nullptr, _user_data.buffer.get());
+        result = ma_pcm_rb_init(
+            ma_format_f32, _device_config->playback.channels, 1024, nullptr, nullptr, _user_data.buffer.get());
         if (result != MA_SUCCESS) {
             fmt::println(": {:s}", _current_file);
             return false;
@@ -237,7 +265,20 @@ namespace wt {
             ma_pcm_rb_uninit(_user_data.buffer.get());
             return false;
         }
+
+        _user_data.is_playing = true;
         return true;
     }
 
+    void AudioPlayer::pause() {
+        if (_user_data.is_playing) {
+            _user_data.is_playing = false;
+        }
+    }
+
+    void AudioPlayer::unpause() {
+        if (!_user_data.is_playing) {
+            _user_data.is_playing = true;
+        }
+    }
 }; // namespace wt
