@@ -1,6 +1,7 @@
 #include "audio.hpp"
 
 #include <cstring>
+#include <fmt/base.h>
 #include <fmt/format.h>
 #include <gsl/assert>
 #include <spdlog/spdlog.h>
@@ -13,7 +14,40 @@ extern "C" {
 #include <array>
 #include <cstdint>
 #include <limits>
+#include <ostream>
+#include <stdexcept>
 #include <string>
+#include <utility>
+
+template <>
+struct fmt::formatter<ma_format> {
+
+    constexpr auto parse(format_parse_context& ctx) {
+        return ctx.begin();
+    }
+
+    auto format(ma_format format, format_context& ctx) const {
+        string_view name;
+        switch (format) {
+        case ma_format_u8:
+            name = "ma_format_u8";
+        case ma_format_s16:
+            name = "ma_format_s16";
+            break;
+        case ma_format_s32:
+            name = "ma_format_s32";
+            break;
+        case ma_format_f32:
+            name = "ma_format_f32";
+            break;
+        default:
+            name = "unknown";
+        }
+
+
+        return fmt::format_to(ctx.out(), "{}", name);
+    }
+};
 
 namespace {
 
@@ -51,7 +85,6 @@ namespace {
     void multiply_volume(ma_device* device, void* output, ma_uint64 n_frames, std::uint8_t vol) {
         Expects(output != nullptr);
         Expects(device != nullptr);
-        Expects(n_frames > 0);
         Expects(vol <= 255);
         Expects(vol >= 0);
 
@@ -133,35 +166,81 @@ namespace {
         memcpy(static_cast<float*>(destination) + buffer_offset, buffer.data(), remaining * out_float_bytes);
     }
 
+    /// @brief Writes audio data to the buffer. This function converts
+    /// the input audio format to f32.
+    /// @param ring_buffer the ring buffer to write data to.
+    /// @param data the audio data to write.
+    /// @param frames the number of frames.
+    /// @param input_channels the number of channels.
+    /// @param input_format the format of the audio data.
+    [[nodiscard]] bool write_to_buffer(
+        ma_pcm_rb* ring_buffer, void* data, ma_uint32 frames, ma_uint32 input_channels, ma_format input_format) {
+        Expects(ring_buffer != nullptr);
+        Expects(data != nullptr);
+        Expects(frames > 0);
 
-    // Works on f32 only!
-    bool write_to_buffer(ma_pcm_rb* buffer, void* data, ma_uint32 frames, ma_format format, std::size_t channels) {
+        // TODO : This should probably not be an error, but I do not
+        // TODO : want to handle this case right now
+        Expects(ring_buffer->channels == input_channels);
 
         void* destination    = nullptr;
         ma_uint32 write_size = frames;
 
-        ma_result const result = ma_pcm_rb_acquire_write(buffer, &write_size, &destination);
+        ma_result const result = ma_pcm_rb_acquire_write(ring_buffer, &write_size, &destination);
+        Expects(destination != nullptr);
+
         if (result != MA_SUCCESS) {
             return false;
         }
+
 
         if (write_size == 0) {
             // Should be something else;
             return true;
         }
 
-        ma_uint32 const written_size = std::min(frames, write_size);
-
-        switch (format) {
+        switch (input_format) {
         case ma_format_s32:
-            s32_to_f32(destination, data, written_size * channels);
+            s32_to_f32(destination, data, write_size * input_channels);
             break;
         case ma_format_s16:
-            s16_to_f32(destination, data, written_size * channels);
+            s16_to_f32(destination, data, write_size * input_channels);
             break;
+        case ma_format_f32:
+            memcpy(destination, data, write_size * ma_get_bytes_per_sample(ma_format_f32) * input_channels);
+            break;
+        default:
+            throw std::runtime_error{"writing format {} to pcm_rm is not supported"};
         }
 
-        return ma_pcm_rb_commit_write(buffer, written_size) == MA_SUCCESS;
+        return ma_pcm_rb_commit_write(ring_buffer, write_size) == MA_SUCCESS;
+    }
+
+    /// Reads from the F32 buffer into data
+    [[nodiscard]] ma_uint32 read_from_buffer(ma_pcm_rb* buffer, void* data, ma_uint32 frames) {
+        Expects(buffer != nullptr);
+        Expects(buffer->channels > 0);
+        Expects(data != nullptr);
+
+
+        void* source        = nullptr;
+        ma_uint32 read_size = frames;
+        ma_result result    = ma_pcm_rb_acquire_read(buffer, &read_size, &source);
+
+        if (result != MA_SUCCESS) {
+            return 0;
+        }
+
+        if (read_size == 0) {
+            // TODO : Should probably return something else
+            return 0;
+        }
+
+        memcpy(data, source, read_size * ma_get_bytes_per_sample(buffer->format) * buffer->channels);
+
+        result = ma_pcm_rb_commit_read(buffer, read_size);
+        Expects((result == MA_SUCCESS) || (result == MA_AT_END));
+        return read_size;
     }
 } // namespace
 
@@ -178,29 +257,10 @@ namespace wt {
             return;
         }
 
+        // Pausing works by zeroing out the output buffer
         if (!user_data->is_playing) {
-            // Need to zero out out buffer
             auto const buffer_size = device->playback.channels * frame_count;
             memset(output, 0, frame_count * ma_get_bytes_per_frame(device->playback.format, device->playback.channels));
-            // switch (device->playback.format) {
-            // case ma_format_u8:
-            //     memset(output, 0, buffer_size);
-            //     break;
-            // case ma_format_s16:
-            //     memset(output, 0, buffer_size * 2);
-            //     break;
-            // case ma_format_s24:
-            //     memset(output, 0, buffer_size * 3);
-            //     break;
-            // case ma_format_s32:
-            //     memset(output, 0, buffer_size * 4);
-            //     break;
-            // case ma_format_f32:
-            //     memset(output, 0, buffer_size * 4);
-            //     break;
-            // default:
-            //     break;
-            // }
             return;
         }
 
@@ -208,10 +268,11 @@ namespace wt {
         ma_decoder_read_pcm_frames(user_data->decoder.get(), output, frame_count, &frames_read);
 
         std::uint8_t const volume = user_data->instance->_volume.load();
-        multiply_volume(device, output, frames_read, volume);
-
-        write_to_buffer(
-            user_data->buffer.get(), output, frames_read, device->playback.format, device->playback.channels);
+        if (frames_read > 0) {
+            multiply_volume(device, output, frames_read, volume);
+            write_to_buffer(
+                user_data->buffer.get(), output, frames_read, device->playback.channels, device->playback.format);
+        }
     }
     /* End Static Methods */
 
@@ -236,6 +297,7 @@ namespace wt {
             return false;
         }
 
+
         _device_config->playback.format   = _user_data.decoder->outputFormat;
         _device_config->playback.channels = _user_data.decoder->outputChannels;
         _device_config->sampleRate        = _user_data.decoder->outputSampleRate;
@@ -244,10 +306,10 @@ namespace wt {
 
         // TODO : We probably wanna make sure we only do these things
         // TODO : once, even if we play a different file
-        result = ma_pcm_rb_init(
-            ma_format_f32, _device_config->playback.channels, 1024, nullptr, nullptr, _user_data.buffer.get());
+        result = ma_pcm_rb_init(ma_format_f32, _device_config->playback.channels, wt::WINDOW_SIZE, nullptr, nullptr,
+            _user_data.buffer.get());
         if (result != MA_SUCCESS) {
-            fmt::println(": {:s}", _current_file);
+            fmt::println("could not initialize queue");
             return false;
         }
 
@@ -280,5 +342,16 @@ namespace wt {
         if (!_user_data.is_playing) {
             _user_data.is_playing = true;
         }
+    }
+
+    std::pair<std::array<float, WINDOW_SIZE>, std::size_t> AudioPlayer::current_window() const {
+        std::array<float, WINDOW_SIZE> result = {};
+        // TODO : Need to programatically get the number of channels
+        // TODO : Need to programatically get the format and use that
+        auto const buffer_channels = _user_data.buffer->channels;
+        auto const frames_to_read  = wt::WINDOW_SIZE / buffer_channels;
+        auto const read_size =
+            read_from_buffer(_user_data.buffer.get(), result.data(), frames_to_read) * buffer_channels;
+        return {result, read_size};
     }
 }; // namespace wt

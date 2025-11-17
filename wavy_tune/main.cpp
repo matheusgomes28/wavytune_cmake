@@ -23,6 +23,7 @@
 
 
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <chrono>
 #include <cmath>
@@ -187,7 +188,9 @@ int main(int argc, char** argv) {
     }
 
     wt::AudioPlayer player;
-    player.play(args->audio_path);
+    if (!player.play(args->audio_path)) {
+        return -1;
+    }
 
     // Testing the fourier shit
     std::function<double(const std::complex<double>&)> applier = [](const std::complex<double>& v) -> double {
@@ -247,7 +250,7 @@ int main(int argc, char** argv) {
     up  = {0, 1, 0};
 
 
-    std::array<std::int32_t, wt::analysis::WINDOW_SIZE> raw_audio{}; // TODO : needs to have double signal size
+    std::array<float, wt::analysis::WINDOW_SIZE> raw_audio{}; // TODO : needs to have double signal size
 
     wt::analysis::FftAnalyzer analyzer;
     auto const hann_coefficients_input  = wt::analysis::make_hann_coefficients<wt::analysis::WINDOW_SIZE>();
@@ -258,6 +261,7 @@ int main(int argc, char** argv) {
             buffer[i] *= hann_coefficients_input[i];
         }
     });
+
     // analyzer.set_postprocessor([](std::array<std::complex<float>, wt::analysis::WINDOW_SIZE>& buffer) {
     //     for (std::size_t i = 0; i < wt::analysis::WINDOW_SIZE; ++i) {
     //         std::complex<float> res = buffer[i];
@@ -284,9 +288,13 @@ int main(int argc, char** argv) {
         // sample_counter += read_from_buffer(&user_data.buffer, raw_audio.data() + sample_counter, samples_to_read,
         //                       device.playback.format, device.playback.channels)
         //                 * device.playback.channels;
+        //
+        auto const [current_window, window_size] = player.current_window();
 
         // TODO : There's an issue where we have left over frames
-        sample_counter = sample_counter < raw_audio.size() ? sample_counter : 0;
+        sample_counter = sample_counter < raw_audio.size() ? sample_counter + window_size : 0;
+        mempcpy(raw_audio.data() + sample_counter, current_window.data(),
+            std::min(current_window.size(), raw_audio.size() - sample_counter));
 
         // lookAt = glm::lookAt(cam.pos, cam.pos + cam.getDirection(), cam.getUp());
         auto const cam = window.camera();
@@ -303,24 +311,18 @@ int main(int argc, char** argv) {
         // auto const transform_complex = analyzer.analyze(wt::test::sin_10);
         if (sample_counter == 0) {
             // convert integer to floats for analysis
-            // std::array<float, wt::analysis::WINDOW_SIZE> audio_floats;
-            // s32_to_f32(audio_floats.data(), raw_audio.data(), raw_audio.size());
 
-            // auto const transform_complex = analyzer.analyze(audio_floats);
-            // std::array<float, wt::analysis::WINDOW_SIZE / 2 + 1> transform{};
-            //
-            // std::transform(begin(transform_complex), end(transform_complex), begin(transform),
-            //     [](std::complex<float> in) { return std::abs(in); });
-            //
-            // // Remove the energy at (0)
-            // for (int i = 0; i < transform.size(); i++) {
-            //     transform[i] *= hann_coefficients_output[i];
-            // }
-            // heights = bin_pack<100>(transform);
-            // heights = normalize(heights, 10.0f);
-            for (int i = 0; i < 100; ++i) {
-                heights[i] = 1.0f;
+            auto const transform_complex = analyzer.analyze(raw_audio);
+            std::array<float, wt::analysis::WINDOW_SIZE / 2 + 1> transform{};
+
+            std::transform(begin(transform_complex), end(transform_complex), begin(transform),
+                [](std::complex<float> in) { return std::abs(in); });
+
+            for (int i = 0; i < transform.size(); i++) {
+                transform[i] *= hann_coefficients_output[i];
             }
+            heights = bin_pack<100>(transform);
+            heights = normalize(heights, 10.0f);
         }
 
         // MARK: Sound analysis
@@ -330,9 +332,11 @@ int main(int argc, char** argv) {
             auto const now_secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch());
             if (play) {
                 player.pause();
+                player.current_window();
                 play = false;
             } else {
                 player.unpause();
+                player.current_window();
                 play = true;
             }
             last = now;

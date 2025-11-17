@@ -1,11 +1,13 @@
 #ifndef AUDIO_H
 #define AUDIO_H
 
+#include <array>
 #include <atomic>
 #include <functional>
 #include <memory>
 #include <miniaudio.h>
 #include <string>
+#include <utility>
 
 extern "C" {
 struct ma_decoder;
@@ -17,6 +19,7 @@ typedef struct ma_pcm_rb ma_pcm_rb;
 
 namespace wt {
 
+    static constexpr std::size_t WINDOW_SIZE = 2048;
 
     template <typename T>
     using CustomPtr = std::unique_ptr<T, std::function<void(T*)>>;
@@ -44,6 +47,8 @@ namespace wt {
         bool play(std::string const& audio_file);
         void pause();
         void unpause();
+
+        std::pair<std::array<float, WINDOW_SIZE>, std::size_t> current_window() const;
 
     private:
         AudioUserData _user_data;

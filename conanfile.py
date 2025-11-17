@@ -7,6 +7,7 @@ class WavyTuneConan(ConanFile):
 
     def requirements(self):
         self.requires("cxxopts/3.2.0")
+        self.requires("fmt/11.2.0")
         self.requires("glew/2.2.0")
         self.requires("glfw/3.4")
         self.requires("glm/1.0.1")
@@ -16,6 +17,7 @@ class WavyTuneConan(ConanFile):
         self.requires("ms-gsl/4.1.0")
         self.requires("spdlog/1.15.3")
 
-	# def imports(self):
-	# 	self.copy("*.dll", dst="bin", src="bin")
-	# 	self.copy("*.dylib", dst="bin", src="lib")
+
+# def imports(self):
+# 	self.copy("*.dll", dst="bin", src="bin")
+# 	self.copy("*.dylib", dst="bin", src="lib")

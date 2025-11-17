@@ -3,6 +3,7 @@ find_package(cxxopts REQUIRED)
 find_package(kissfft REQUIRED)
 find_package(miniaudio REQUIRED)
 find_package(spdlog REQUIRED)
+find_package(fmt REQUIRED)
 
 add_executable(wavy_tune)
 

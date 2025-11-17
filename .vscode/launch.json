@@ -8,7 +8,7 @@
       "program": "${workspaceFolder}/build/unix-deb-ninja/wavy_tune/wavy_tune",
       "args": [
         "--audio-file",
-        "brazil_anthem.wav",
+        "sounds/brazil_anthem.wav",
         "--vertex-shader",
         "shaders/vs.glsl",
         "--frag-shader",
@@ -22,4 +22,3 @@
     }
   ]
 }
-
